@@ -2,8 +2,10 @@ package com.apiumhub.github.domain.entity
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.apiumhub.github.AllOpen
 
-data class Repository(
+@AllOpen
+class Repository(
         val id: Int?,
         val name: String?,
         val full_name: String?,
@@ -46,7 +48,8 @@ data class Repository(
 
 }
 
-data class RepositoryOwner(
+@AllOpen
+class RepositoryOwner(
         val login: String?,
         val id: Int?,
         val avatar_url: String?,

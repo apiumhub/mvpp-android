@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-allopen'
 
 android {
     compileSdkVersion 27
@@ -23,6 +24,10 @@ android {
     dataBinding {
         enabled = true
     }
+}
+
+allOpen {
+    annotation("com.apiumhub.github.AllOpen")
 }
 
 dependencies {
@@ -56,6 +61,10 @@ dependencies {
     kaptTest "android.arch.lifecycle:compiler:1.1.1"
 
     testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:2.18.0'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
+
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'org.mockito:mockito-android:2.18.0'
 }

@@ -1,4 +1,9 @@
 package com.apiumhub.github.domain.entity
 
-data class CommitsDto(val total: Int?)
-data class BranchDto(val name: String?)
+import com.apiumhub.github.AllOpen
+
+@AllOpen
+class CommitsDto(val total: Int?)
+
+@AllOpen
+class BranchDto(val name: String?)

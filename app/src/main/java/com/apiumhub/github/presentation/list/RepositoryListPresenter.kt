@@ -21,6 +21,7 @@ interface IRepositoryListService {
 
     companion object {
         fun create() = RepositoryListInteractor(IGithubRepository.create())
+        fun create(repository: IGithubRepository) = RepositoryListInteractor(repository)
     }
 }
 

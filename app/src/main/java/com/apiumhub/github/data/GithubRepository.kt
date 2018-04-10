@@ -20,6 +20,10 @@ interface IGithubRepository {
             return GithubRepository(GithubApi.create(), errorsStream)
         }
 
+        fun create(api: GithubApi, errorsStream: PublishSubject<Throwable>): IGithubRepository {
+            return GithubRepository(api, errorsStream)
+        }
+
         val errorsStream: PublishSubject<Throwable> = PublishSubject.create()
     }
 }

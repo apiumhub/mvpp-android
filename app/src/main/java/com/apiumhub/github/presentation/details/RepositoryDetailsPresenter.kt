@@ -13,8 +13,8 @@ interface IRepositoryDetailsService {
 
     companion object {
         fun create() = RepositoryDetailsInteractor(IGithubRepository.create())
+        fun create(repository: IGithubRepository) = RepositoryDetailsInteractor(repository)
     }
-
 }
 
 interface IRepositoryDetailsView {

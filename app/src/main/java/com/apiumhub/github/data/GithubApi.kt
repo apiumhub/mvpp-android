@@ -33,10 +33,8 @@ interface GithubApi {
     fun getReadmeForRepository(@Path("owner") user: String, @Path("repository") repository: String): Observable<String>
 
     companion object {
-        private val BASE_URL: String
-            get() = "https://api.github.com"
 
-        fun create(): GithubApi {
+        fun create(baseUrl: String = "https://api.github.com"): GithubApi {
             val client = OkHttpClient
                     .Builder()
                     .addInterceptor(
@@ -51,7 +49,7 @@ interface GithubApi {
                     .addConverterFactory(ScalarsConverterFactory.create())//Needed to handle HTML String responses
                     .addConverterFactory(GsonConverterFactory.create())
                     .client(client)
-                    .baseUrl(BASE_URL)
+                    .baseUrl(baseUrl)
                     .build()
 
             return retrofit.create(GithubApi::class.java)
