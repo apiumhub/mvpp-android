@@ -22,7 +22,7 @@ class MockGithubRepository: IGithubRepository {
 
     private val someBranchesList: List<BranchDto> = listOf(someBranchDto, someBranchDto, someBranchDto)
 
-    private val someReadme: String = "someReadme" //Can't mock String as it's final
+    private val someReadme: String = "someReadme"
 
     override fun findAllRepositories(): Observable<List<Repository>> = Observable.just(someRepositoryList).delay(500, TimeUnit.MILLISECONDS)
 
