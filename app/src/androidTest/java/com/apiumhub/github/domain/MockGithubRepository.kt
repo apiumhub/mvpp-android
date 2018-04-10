@@ -3,6 +3,8 @@ package com.apiumhub.github.domain
 import com.apiumhub.github.data.IGithubRepository
 import com.apiumhub.github.domain.entity.*
 import io.reactivex.Observable
+import java.util.concurrent.TimeUnit
+
 class MockGithubRepository: IGithubRepository {
 
     private val someOwner = RepositoryOwner("someLogin", 1, "http://someAvatarUrl.domain", "http://someUrl.domain")
@@ -22,13 +24,13 @@ class MockGithubRepository: IGithubRepository {
 
     private val someReadme: String = "someReadme" //Can't mock String as it's final
 
-    override fun findAllRepositories(): Observable<List<Repository>> = Observable.just(someRepositoryList)
+    override fun findAllRepositories(): Observable<List<Repository>> = Observable.just(someRepositoryList).delay(500, TimeUnit.MILLISECONDS)
 
-    override fun searchRepositories(query: String): Observable<RepositorySearchDto> = Observable.just(someRepositorySearchResult)
+    override fun searchRepositories(query: String): Observable<RepositorySearchDto> = Observable.just(someRepositorySearchResult).delay(500, TimeUnit.MILLISECONDS)
 
-    override fun getCommitsForRepository(user: String, repository: String): Observable<List<CommitsDto>> = Observable.just(someRepositoryCommitsList)
+    override fun getCommitsForRepository(user: String, repository: String): Observable<List<CommitsDto>> = Observable.just(someRepositoryCommitsList).delay(500, TimeUnit.MILLISECONDS)
 
-    override fun getBranchesForRepository(user: String, repository: String): Observable<List<BranchDto>> = Observable.just(someBranchesList)
+    override fun getBranchesForRepository(user: String, repository: String): Observable<List<BranchDto>> = Observable.just(someBranchesList).delay(500, TimeUnit.MILLISECONDS)
 
-    override fun getReadmeForRepository(user: String, repository: String): Observable<String> = Observable.just(someReadme)
+    override fun getReadmeForRepository(user: String, repository: String): Observable<String> = Observable.just(someReadme).delay(500, TimeUnit.MILLISECONDS)
 }
