@@ -32,14 +32,17 @@ class GithubRepositoryTest {
 
     @Test
     fun test_errors_stream_publishes_exception_when_error_occurs_on_http_request() {
-        val latch = CountDownLatch(1)
-        mockWebServer.enqueue(MockResponse().setResponseCode(500))
+        val latch = CountDownLatch(2)
+        mockWebServer.enqueue(MockResponse().setResponseCode(500).setBody("[]"))
         errorsStream.subscribe {
             Assert.assertTrue(it is HttpException)
             Assert.assertTrue((it as HttpException).code() == 500)
             latch.countDown()
         }
-        sut.findAllRepositories().subscribe {}
+        sut.findAllRepositories().subscribe {
+            Assert.assertTrue(it.isEmpty())
+            latch.countDown()
+        }
         latch.await()
     }
 
