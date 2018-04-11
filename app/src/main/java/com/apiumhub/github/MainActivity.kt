@@ -34,6 +34,6 @@ class MainActivity : AppCompatActivity(), IErrorsView {
     }
 
     override fun onForbiddenError() {
-        Snackbar.make(findViewById(android.R.id.content), "Forbidden error", Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(findViewById(android.R.id.content), "Max requests limit reached. Try again later.", Snackbar.LENGTH_SHORT).show()
     }
 }
