@@ -5,12 +5,13 @@ import com.apiumhub.github.domain.entity.CommitsDto
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.entity.RepositorySearchDto
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.subjects.PublishSubject
 import java.util.concurrent.TimeUnit
 
 interface IGithubRepository {
-    fun findAllRepositories(): Observable<List<Repository>>
-    fun searchRepositories(query: String): Observable<RepositorySearchDto>
+    fun findAllRepositories(): Single<List<Repository>>
+    fun searchRepositories(query: String): Single<RepositorySearchDto>
     fun getCommitsForRepository(user: String, repository: String): Observable<List<CommitsDto>>
     fun getBranchesForRepository(user: String, repository: String): Observable<List<BranchDto>>
     fun getReadmeForRepository(user: String, repository: String): Observable<String>
@@ -30,10 +31,10 @@ interface IGithubRepository {
 
 class GithubRepository(private val api: GithubApi, private val errorsStream: PublishSubject<Throwable>) : IGithubRepository {
 
-    override fun findAllRepositories(): Observable<List<Repository>> =
+    override fun findAllRepositories(): Single<List<Repository>> =
             executeRequest(api.findAllRepositories(), emptyList())
 
-    override fun searchRepositories(query: String): Observable<RepositorySearchDto> =
+    override fun searchRepositories(query: String): Single<RepositorySearchDto> =
             executeRequest(api.searchRepositories(query), RepositorySearchDto(0, true, emptyList()))
 
     override fun getCommitsForRepository(user: String, repository: String): Observable<List<CommitsDto>> =
@@ -64,6 +65,13 @@ class GithubRepository(private val api: GithubApi, private val errorsStream: Pub
             executeRequest(api.getReadmeForRepository(user, repository), String())
 
     private fun <T> executeRequest(request: Observable<T>, returnOnError: T? = null): Observable<T> {
+        return request.onErrorReturn {
+            errorsStream.onNext(it)
+            returnOnError
+        }
+    }
+
+    private fun <T> executeRequest(request: Single<T>, returnOnError: T? = null): Single<T> {
         return request.onErrorReturn {
             errorsStream.onNext(it)
             returnOnError

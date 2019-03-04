@@ -27,7 +27,7 @@ class RepositoryListServiceImpl(private val repository: IGithubRepository) : Rep
       repository.findAllRepositories()
         .subscribeOn(Schedulers.newThread())
         .observeOn(AndroidSchedulers.mainThread())
-        .subscribeBy(onError = onError, onNext = onSuccess)
+        .subscribeBy(onError = onError, onSuccess = onSuccess)
     )
   }
 
@@ -40,7 +40,7 @@ class RepositoryListServiceImpl(private val repository: IGithubRepository) : Rep
         }
         .subscribeOn(Schedulers.newThread())
         .observeOn(AndroidSchedulers.mainThread())
-        .subscribeBy(onError = onError, onNext = onSuccess)
+        .subscribeBy(onError = onError, onSuccess = onSuccess)
     )
   }
 

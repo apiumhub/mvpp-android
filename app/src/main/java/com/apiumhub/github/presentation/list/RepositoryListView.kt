@@ -6,6 +6,7 @@ import android.view.View
 import com.apiumhub.github.R
 import com.apiumhub.github.databinding.ContentMainBinding
 import com.apiumhub.github.domain.entity.Repository
+import com.apiumhub.github.domain.repository.list.RepositoryListService
 import com.apiumhub.github.presentation.Navigator
 import com.apiumhub.github.presentation.base.BaseFragment
 import com.jakewharton.rxbinding2.widget.RxTextView

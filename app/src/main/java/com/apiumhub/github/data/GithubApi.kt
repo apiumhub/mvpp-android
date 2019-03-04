@@ -5,6 +5,7 @@ import com.apiumhub.github.domain.entity.CommitsDto
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.entity.RepositorySearchDto
 import io.reactivex.Observable
+import io.reactivex.Single
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
@@ -17,10 +18,10 @@ import retrofit2.http.*
 interface GithubApi {
 
     @GET("/repositories")
-    fun findAllRepositories(): Observable<List<Repository>>
+    fun findAllRepositories(): Single<List<Repository>>
 
     @GET("/search/repositories")
-    fun searchRepositories(@Query("q") query: String): Observable<RepositorySearchDto>
+    fun searchRepositories(@Query("q") query: String): Single<RepositorySearchDto>
 
     @GET("/repos/{owner}/{repository}/stats/commit_activity")
     fun getCommitsForRepository(@Path("owner") user: String, @Path("repository") repository: String): Observable<Response<List<CommitsDto>>>
