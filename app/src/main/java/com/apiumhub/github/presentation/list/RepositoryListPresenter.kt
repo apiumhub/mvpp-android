@@ -1,43 +1,48 @@
 package com.apiumhub.github.presentation.list
 
-import com.apiumhub.github.data.IGithubRepository
-import com.apiumhub.github.domain.repository.list.RepositoryListInteractor
 import com.apiumhub.github.domain.entity.Repository
+import com.apiumhub.github.domain.repository.list.RepositoryListService
 
 interface IRepositoryListView {
-    fun loadItems(func: () -> Unit)
-    fun searchItems(func: (query: String) -> Unit)
-    fun itemsLoaded(items: List<Repository>)
+  fun itemsLoaded(items: List<Repository>)
 
-    companion object {
-        fun create() = RepositoryListFragment.newInstance()
-    }
+  companion object {
+    fun create() = RepositoryListFragment.newInstance()
+  }
 }
 
-interface IRepositoryListService {
-    fun findAll()
-    fun search(query: String)
-    fun onReposFound(func: (List<Repository>) -> Unit)
+class RepositoryListPresenterBinder(view: IRepositoryListView, private val service: RepositoryListService) :
+  RepositoryListPresenter(view) {
 
-    companion object {
-        fun create() = RepositoryListInteractor(IGithubRepository.create())
-        fun create(repository: IGithubRepository) = RepositoryListInteractor(repository)
-    }
+  override fun onViewCreated() {
+    service.findAll(::onRepositoryListFound, ::onRepositoryListError)
+  }
+
+  override fun onSearch(query: String) {
+    service.search(query, ::onRepositoryListFound, ::onRepositoryListError)
+  }
+
+  override fun onDestroyView() {
+    service.clear()
+  }
 }
 
-class RepositoryListPresenter(view: IRepositoryListView, service: IRepositoryListService) {
+open class RepositoryListPresenter(private val view: IRepositoryListView) {
+  open fun onViewCreated() {}
+  open fun onDestroyView() {}
+  protected open fun onSearch(query: String) {}
 
-    init {
-        view.loadItems {
-            service.findAll()
-        }
+  fun findAll() {
+    onViewCreated()
+  }
 
-        view.searchItems {
-            service.search(it)
-        }
+  fun findFilterByQuery(query: String) {
+    onSearch(query)
+  }
 
-        service.onReposFound {
-            view.itemsLoaded(it)
-        }
-    }
+  fun onRepositoryListFound(list: List<Repository>) {
+    view.itemsLoaded(list)
+  }
+
+  fun onRepositoryListError(throwable: Throwable) {}
 }
