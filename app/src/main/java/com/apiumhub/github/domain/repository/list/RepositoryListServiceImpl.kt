@@ -8,9 +8,8 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 
 interface RepositoryListService {
-  fun findAll(onSuccess: (List<Repository>) -> Unit, onError: (Throwable) -> Unit)
-  fun search(query: String, onSuccess: (List<Repository>) -> Unit, onError: (Throwable) -> Unit)
-  fun clear()
+  suspend fun findAll(): List<Repository>
+  suspend fun search(query: String): List<Repository>
 
   companion object {
     fun create(): RepositoryListService = RepositoryListServiceImpl(IGithubRepository.create())
@@ -20,31 +19,7 @@ interface RepositoryListService {
 
 class RepositoryListServiceImpl(private val repository: IGithubRepository) : RepositoryListService {
 
-  private val disposeBag = CompositeDisposable()
+  override suspend fun findAll() = repository.findAllRepositories()
 
-  override fun findAll(onSuccess: (List<Repository>) -> Unit, onError: (Throwable) -> Unit) {
-    disposeBag.add(
-      repository.findAllRepositories()
-        .subscribeOn(Schedulers.newThread())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeBy(onError = onError, onSuccess = onSuccess)
-    )
-  }
-
-  override fun search(query:String, onSuccess: (List<Repository>) -> Unit, onError: (Throwable) -> Unit) {
-    disposeBag.add(
-      repository.searchRepositories(query)
-        .filter{ it.items != null}
-        .map{
-          it.items!!
-        }
-        .subscribeOn(Schedulers.newThread())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeBy(onError = onError, onSuccess = onSuccess)
-    )
-  }
-
-  override fun clear() {
-    disposeBag.clear()
-  }
+  override suspend fun search(query:String): List<Repository>  = repository.searchRepositories(query).items.orEmpty()
 }

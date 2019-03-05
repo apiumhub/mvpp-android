@@ -41,6 +41,9 @@ dependencies {
   implementation "android.arch.lifecycle:runtime:1.1.1"
   implementation "android.arch.lifecycle:extensions:1.1.1"
 
+  //koin
+  implementation "org.koin:koin-android:1.0.2"
+
   //Retrofit
   implementation "com.squareup.retrofit2:retrofit:2.3.0"
   implementation "com.squareup.retrofit2:converter-gson:2.3.0"
@@ -66,7 +69,7 @@ dependencies {
   kaptTest "android.arch.lifecycle:compiler:1.1.1"
 
   testImplementation 'junit:junit:4.12'
-  testImplementation 'io.mockk:mockk:1.8.6'
+  testImplementation 'io.mockk:mockk:1.9'
 
   androidTestImplementation 'com.android.support.test:runner:1.0.1'
   androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'

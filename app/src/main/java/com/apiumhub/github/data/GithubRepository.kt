@@ -10,8 +10,8 @@ import io.reactivex.subjects.PublishSubject
 import java.util.concurrent.TimeUnit
 
 interface IGithubRepository {
-    fun findAllRepositories(): Single<List<Repository>>
-    fun searchRepositories(query: String): Single<RepositorySearchDto>
+    suspend fun findAllRepositories(): List<Repository>
+    suspend fun searchRepositories(query: String): RepositorySearchDto
     fun getCommitsForRepository(user: String, repository: String): Observable<List<CommitsDto>>
     fun getBranchesForRepository(user: String, repository: String): Observable<List<BranchDto>>
     fun getReadmeForRepository(user: String, repository: String): Observable<String>
@@ -31,11 +31,9 @@ interface IGithubRepository {
 
 class GithubRepository(private val api: GithubApi, private val errorsStream: PublishSubject<Throwable>) : IGithubRepository {
 
-    override fun findAllRepositories(): Single<List<Repository>> =
-            executeRequest(api.findAllRepositories(), emptyList())
+    override suspend fun findAllRepositories(): List<Repository> = api.findAllRepositories().await()
 
-    override fun searchRepositories(query: String): Single<RepositorySearchDto> =
-            executeRequest(api.searchRepositories(query), RepositorySearchDto(0, true, emptyList()))
+    override suspend fun searchRepositories(query: String): RepositorySearchDto = api.searchRepositories(query).await()
 
     override fun getCommitsForRepository(user: String, repository: String): Observable<List<CommitsDto>> =
             executeRequest(api.getCommitsForRepository(user, repository)

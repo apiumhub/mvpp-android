@@ -1,17 +1,20 @@
-package com.apiumhub.github.presentation.list
+package com.apiumhub.github.presentation.list.presenter
 
 import com.apiumhub.github.domain.entity.Repository
+import com.apiumhub.github.presentation.list.IRepositoryListView
+import com.apiumhub.github.presentation.list.RepositoryListPresenter
+import com.apiumhub.github.presentation.list.RepositoryListPresenterBinder
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 
-class RepositoryListPresenterTest {
+class RepositoryListPresenterChildBinderTest{
   private val view: IRepositoryListView = mockk(relaxed = true)
   private val binder: RepositoryListPresenterBinder = mockk(relaxed = true)
 
-  private lateinit var sut: RepositoryListPresenter
+  lateinit var sut: RepositoryListPresenter
 
   @Before
   fun setUp() {

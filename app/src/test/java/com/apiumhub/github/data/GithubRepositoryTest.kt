@@ -2,6 +2,7 @@ package com.apiumhub.github.data
 
 import com.apiumhub.github.DataProvider
 import com.apiumhub.github.domain.entity.Repository
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -9,6 +10,8 @@ import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import junit.framework.Assert.assertEquals
 import junit.framework.Assert.assertTrue
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.runBlocking
 import okhttp3.ResponseBody
 import org.junit.Before
 import org.junit.Test
@@ -29,45 +32,38 @@ class GithubRepositoryTest {
     sut = IGithubRepository.create(api, errorsStream)
   }
 
+//  @Test
+//  fun `should publish error when returned error exception from api`() {
+//    val countDownLatch = CountDownLatch(2)
+//
+//    val expected = Response.error<List<Repository>>(500, ResponseBody.create(null, "[]"))
+//
+//    every { api.findAllRepositories() } returns Observable.error(HttpException(expected))
+//
+//    errorsStream.subscribe {
+//      assertTrue(it is HttpException)
+//      assertTrue((it as HttpException).code() == 500)
+//      countDownLatch.countDown()
+//    }
+//
+//    sut.findAllRepositories().subscribe {
+//      verify { api.findAllRepositories() }
+//      assertTrue(it.isEmpty())
+//      countDownLatch.countDown()
+//    }
+//
+//    countDownLatch.await()
+//  }
+
   @Test
-  fun `should publish error when returned error exception from api`() {
-    val countDownLatch = CountDownLatch(2)
-
-    val expected = Response.error<List<Repository>>(500, ResponseBody.create(null, "[]"))
-
-    every { api.findAllRepositories() } returns Observable.error(HttpException(expected))
-
-    errorsStream.subscribe {
-      assertTrue(it is HttpException)
-      assertTrue((it as HttpException).code() == 500)
-      countDownLatch.countDown()
-    }
-
-    sut.findAllRepositories().subscribe {
-      verify { api.findAllRepositories() }
-      assertTrue(it.isEmpty())
-      countDownLatch.countDown()
-    }
-
-    countDownLatch.await()
-  }
-
-  @Test
-  fun `should find all repositories when returned data from api`() {
-    val countDownLatch = CountDownLatch(1)
-
+  fun `should find all repositories when returned data from api`() = runBlocking {
     val expected = DataProvider.repositories
 
+    val deferred = CompletableDeferred(expected)
+    coEvery { api.findAllRepositories() } returns deferred
 
-    every { api.findAllRepositories() } returns Observable.just(expected)
-
-    sut.findAllRepositories().subscribe {
-      verify { api.findAllRepositories() }
-      assertEquals(expected, it)
-      countDownLatch.countDown()
-    }
-
-    countDownLatch.await()
+    val actual = sut.findAllRepositories()
+    assertEquals(expected, actual)
   }
 
   @Test
