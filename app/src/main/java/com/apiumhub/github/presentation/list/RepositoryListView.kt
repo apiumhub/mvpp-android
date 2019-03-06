@@ -9,6 +9,7 @@ import com.apiumhub.github.databinding.ContentMainBinding
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.presentation.Navigator
 import com.apiumhub.github.presentation.base.BaseFragment
+import com.apiumhub.github.presentation.list.presenter.RepositoryListPresenterClassic
 import com.apiumhub.github.presentation.list.presenter.RepositoryListPresenterParent
 import com.jakewharton.rxbinding2.widget.RxTextView
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -25,6 +26,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), IRepositoryLi
 
 //  private val presenter: RepositoryListPresenter = get { ParameterList(this as IRepositoryListView) }
   private val presenterChild: RepositoryListPresenterParent by inject()
+  private val presenterClassic: RepositoryListPresenterClassic = get { ParameterList(this as IRepositoryListView) }
 
   private val adapter = RepoListAdapter {
     Navigator.openRepositoryDetails(fragmentManager!!, it)
@@ -33,7 +35,9 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), IRepositoryLi
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
 //    presenter.onViewCreated()
-    presenterChild.onViewCreated(this)
+//    presenterChild.onViewCreated(this)
+    presenterClassic.findAll()
+
     setupSearch()
     binding.contentMainList.adapter = adapter
     binding.contentMainList.layoutManager = LinearLayoutManager(context)
@@ -77,10 +81,12 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), IRepositoryLi
       .subscribe {
         if (it.isEmpty()) {
 //          presenter.findAll()
-          presenterChild.findAll()
+//          presenterChild.findAll()
+          presenterClassic.findAll()
         } else {
 //          presenter.findFilterByQuery(it.trim().toString())
-          presenterChild.findFilterByQuery(it.trim().toString())
+//          presenterChild.findFilterByQuery(it.trim().toString())
+          presenterClassic.findFilterByQuery(it.trim().toString())
         }
       }
   }
