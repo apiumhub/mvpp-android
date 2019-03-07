@@ -6,8 +6,9 @@ import org.koin.android.ext.android.startKoin
 fun Application.startInjector() = startKoin(
   this,
   listOf(
-    binderModule,
     presenterModule,
+    inputModule,
+    orchestratorModule,
     servicesModule
   )
 )

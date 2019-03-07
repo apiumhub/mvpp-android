@@ -7,8 +7,6 @@ import android.widget.Toast
 import com.apiumhub.github.R
 import com.apiumhub.github.databinding.ContentMainBinding
 import com.apiumhub.github.domain.entity.Repository
-import com.apiumhub.github.domain.repository.list.SearchPresenter
-import com.apiumhub.github.domain.repository.list.SearchView
 import com.apiumhub.github.presentation.Navigator
 import com.apiumhub.github.presentation.base.BaseFragment
 import com.jakewharton.rxbinding2.widget.RxTextView
@@ -19,68 +17,64 @@ import org.koin.android.ext.android.get
 import org.koin.core.parameter.ParameterList
 import java.util.concurrent.TimeUnit
 
-class RepositoryListFragment : BaseFragment<ContentMainBinding>(), SearchView {
-    override fun getLayoutId(): Int = R.layout.content_main
+class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryListView {
 
-    private val presenter: SearchPresenter = get { ParameterList(this as SearchView) }
+  override fun getLayoutId(): Int = R.layout.content_main
 
-    private val adapter = RepoListAdapter {
-        Navigator.openRepositoryDetails(fragmentManager!!, it)
-    }
+  private val input: RepositoryListInput = get { ParameterList(this as RepositoryListView) }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        presenter.onFindAll()
+  private val adapter = RepoListAdapter {
+    Navigator.openRepositoryDetails(fragmentManager!!, it)
+  }
 
-        setupSearch()
-        binding.contentMainList.adapter = adapter
-        binding.contentMainList.layoutManager = LinearLayoutManager(context)
-    }
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    input.findAll()
 
-    override fun hideLoading() {
-        progress.visibility = View.GONE
-    }
+    setupSearch()
+    binding.contentMainList.adapter = adapter
+    binding.contentMainList.layoutManager = LinearLayoutManager(context)
+  }
 
-    override fun showLoading() {
-        progress.visibility = View.VISIBLE
-    }
+  override fun startLoading() {
+    progress.visibility = View.VISIBLE
+  }
 
-    override fun stopLoading() {
-        progress.visibility = View.GONE
-        onError()
-    }
+  override fun stopLoading() {
+    progress.visibility = View.GONE
+  }
 
-    override fun onEmpty() {
-        adapter.setItems(emptyList())
-        adapter.notifyDataSetChanged()
-    }
+  override fun onEmpty() {
+    adapter.setItems(emptyList())
+    adapter.notifyDataSetChanged()
+  }
 
-    override fun onData(items: List<Repository>) {
-        adapter.setItems(items)
-        adapter.notifyDataSetChanged()
-    }
+  override fun onData(items: List<Repository>) {
+    adapter.setItems(items)
+    adapter.notifyDataSetChanged()
+  }
 
-    override fun onError() {
-        Toast.makeText(context, "generic error", Toast.LENGTH_SHORT).show()
-    }
+  override fun onError() {
+    Toast.makeText(context, "generic error", Toast.LENGTH_SHORT).show()
+  }
 
-    private fun setupSearch() {
-        RxTextView
-                .textChanges(binding.contentMainSearch)
-                .debounce(300, TimeUnit.MILLISECONDS)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .map { it.trim() }
-                .subscribe {
-                    if (it.isEmpty()) {
-                        presenter.onFindAll()
-                    } else {
-                        presenter.onSearch(it.trim().toString())
-                    }
-                }
-    }
+  private fun setupSearch() {
+    RxTextView
+      .textChanges(binding.contentMainSearch)
+      .debounce(300, TimeUnit.MILLISECONDS)
+      .subscribeOn(Schedulers.io())
+      .observeOn(AndroidSchedulers.mainThread())
+      .map { it.trim() }
+      .subscribe {
+        if (it.isEmpty()) {
+          input.findAll()
+        } else {
+          input.search(it.trim().toString())
+        }
+      }
+  }
 
-    companion object {
-        fun newInstance(): RepositoryListFragment = RepositoryListFragment()
-    }
+  companion object {
+    fun newInstance(): RepositoryListFragment = RepositoryListFragment()
+  }
 }

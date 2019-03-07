@@ -10,21 +10,16 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+
+
 class RepositoryListPresenterClassicTest {
-  private val view: IRepositoryListView = mockk(relaxed = true)
+  val view: IRepositoryListView = mockk(relaxed = true)
 
   private lateinit var sut: RepositoryListPresenterClassic
 
-  @Before
-  fun setUp() {
-    sut = RepositoryListPresenterClassic(view, mockk(), Dispatchers.Unconfined)
+  init {
+    sut = RepositoryListPresenterClassic(view, mockk())
   }
-
-  @After
-  fun tearDown() {
-    sut.onDestroyView()
-  }
-
 
   @Test
   fun `when find all, view should show loading`() = runBlocking {
