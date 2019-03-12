@@ -2,94 +2,53 @@ package com.apiumhub.github.presentation.list
 
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.repository.list.RepositoryListService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 
-interface IRepositoryListView {
-  fun hideLoading()
-  fun showLoading()
 
-  fun itemsEmpty()
-  fun itemsLoaded(items: List<Repository>)
-  fun showError(error: Throwable)
+sealed class RepositoryListInput {
+  object FIND_ALL : RepositoryListInput()
+  class SEARCH(val query: String) : RepositoryListInput()
+}
+
+sealed class RepositoryListOutput {
+  class Found(val list: List<Repository>) : RepositoryListOutput()
+  object Empty : RepositoryListOutput()
+  object ErrorNullList : RepositoryListOutput()
+  object ErrorNoInternet : RepositoryListOutput()
+  object ErrorOther : RepositoryListOutput()
+  object Start : RepositoryListOutput()
+  object Stop : RepositoryListOutput()
+}
+
+interface RepositoryListView {
+  //input
+  fun findAll(func: () -> Unit)
+  fun search(func: (String) -> Unit)
+
+  //output
+  fun onData(data: List<Repository>)
+  fun onEmpty()
+  fun onError()
+  fun startLoading()
+  fun stopLoading()
 
   companion object {
     fun create() = RepositoryListFragment.newInstance()
+    fun createPresenter(view: RepositoryListView) = RepositoryListPresenter(view, RepositoryListService.create())
   }
 }
 
-class RepositoryListPresenterBinder(private val service: RepositoryListService) : CoroutineScope {
-  private lateinit var job: Job
-  override val coroutineContext: CoroutineContext
-    get() = job + Dispatchers.Main
+class RepositoryListPresenter(view: RepositoryListView, service: RepositoryListService) {
+  init {
+    view.findAll(service::findAll)
+    view.search(service::search)
 
-  fun onInitialize() {
-    this.job = Job()
-  }
-
-  fun onDestroy() {
-    this.job.cancel()
-  }
-
-  fun fetchRepositoryList(onSuccess: (List<Repository>) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
-    launch {
-      try {
-        val result = service.findAll()
-        onSuccess(result)
-      } catch (exception: Exception) {
-        onError(exception)
-      }
-    }
-  }
-
-  fun fetchRepositoryListByQuery(query: String, onSuccess: (List<Repository>) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
-    launch {
-      try {
-        val result = service.search(query)
-        onSuccess(result)
-      } catch (exception: Exception) {
-        onError(exception)
-      }
-    }
+    service.onData(view::onData)
+    service.onEmpty(view::onEmpty)
+    service.onErrorNoInternet(view::onError)
+    service.onErrorNullList(view::onError)
+    service.onErrorOther(view::onError)
+    service.onStartLoading(view::startLoading)
+    service.onStopLoading(view::stopLoading)
   }
 }
 
-class RepositoryListPresenter(private val view: IRepositoryListView, private val binder: RepositoryListPresenterBinder) {
-
-  fun onViewCreated() {
-    binder.onInitialize()
-    findAll()
-  }
-
-  fun onDestroyView() {
-    binder.onDestroy()
-  }
-
-  fun findAll() {
-    binder.fetchRepositoryList(::onRepositoryListFound, ::onRepositoryListError)
-    view.showLoading()
-  }
-
-  fun findFilterByQuery(query: String) {
-    binder.fetchRepositoryListByQuery(query, ::onRepositoryListFound, ::onRepositoryListError)
-    view.showLoading()
-  }
-
-  fun onRepositoryListFound(list: List<Repository>) {
-    view.hideLoading()
-
-    if (list.isEmpty()) {
-      view.itemsEmpty()
-    } else {
-      view.itemsLoaded(list)
-    }
-  }
-
-  fun onRepositoryListError(throwable: Throwable) {
-    view.hideLoading()
-    view.showError(throwable)
-  }
-}
