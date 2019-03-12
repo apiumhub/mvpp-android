@@ -13,7 +13,6 @@ import java.net.UnknownHostException
 
 interface RepositoryListService {
   //input
-  fun findAll()
   fun search(query: String)
 
   //output
@@ -37,40 +36,21 @@ class RepositoryListServiceImpl(private val repository: IGithubRepository) :
   private val subject = PublishSubject.create<RepositoryListOutput>()
   private val disposeBag = CompositeDisposable()
 
-  override fun findAll() {
-    GlobalScope.launch(Job() + Dispatchers.Main) {
-      subject.onNext(RepositoryListOutput.Start)
-
-      try {
-        val items = repository.findAllRepositories()
-
-        when {
-          items.isEmpty() -> subject.onNext(RepositoryListOutput.Empty)
-          else -> subject.onNext(RepositoryListOutput.Found(items))
-        }
-        subject.onNext(RepositoryListOutput.Stop)
-      } catch (exception: Exception) {
-        if (exception is UnknownHostException) {
-          subject.onNext(RepositoryListOutput.ErrorNoInternet)
-        } else {
-          subject.onNext(RepositoryListOutput.ErrorOther)
-        }
-        subject.onNext(RepositoryListOutput.Stop)
-      }
-    }
-  }
-
   override fun search(query: String) {
     GlobalScope.launch(Job() + Dispatchers.Main) {
       subject.onNext(RepositoryListOutput.Start)
 
       try {
-        val result = repository.searchRepositories(query)
-        val items = result.items
+        val result = if (query.isNotEmpty()) {
+          repository.searchRepositories(query).items
+        } else {
+          repository.findAllRepositories()
+        }
+
         when {
-          items == null -> subject.onNext(RepositoryListOutput.ErrorNullList)
-          items.isEmpty() -> subject.onNext(RepositoryListOutput.Empty)
-          else -> subject.onNext(RepositoryListOutput.Found(items))
+          result == null -> subject.onNext(RepositoryListOutput.ErrorNullList)
+          result.isEmpty() -> subject.onNext(RepositoryListOutput.Empty)
+          else -> subject.onNext(RepositoryListOutput.Found(result))
         }
         subject.onNext(RepositoryListOutput.Stop)
       } catch (exception: Exception) {

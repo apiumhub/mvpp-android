@@ -22,7 +22,10 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
 
   private val disposeBag = CompositeDisposable()
   private val publishSubject = PublishSubject.create<RepositoryListInput>()
-  private val presenter: RepositoryListPresenter = RepositoryListView.createPresenter(this)
+
+  init {
+    RepositoryListView.createPresenter(this)
+  }
 
   override fun getLayoutId(): Int = R.layout.content_main
 
@@ -32,7 +35,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    event(RepositoryListInput.FIND_ALL)
+    event(RepositoryListInput.SEARCH())
 
     setupSearch()
     binding.contentMainList.adapter = adapter
@@ -74,11 +77,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
       .observeOn(AndroidSchedulers.mainThread())
       .map { it.trim() }
       .subscribe {
-        if (it.isEmpty()) {
-          event(RepositoryListInput.FIND_ALL)
-        } else {
-          event(RepositoryListInput.SEARCH(it.trim().toString()))
-        }
+        event(RepositoryListInput.SEARCH(it.trim().toString()))
       })
   }
 
@@ -87,10 +86,6 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
   }
 
   // subscriptions
-  override fun findAll(func: () -> Unit) {
-    disposeBag.add(publishSubject.filter { it is RepositoryListInput.FIND_ALL }.subscribe { func() })
-  }
-
   override fun search(func: (String) -> Unit) {
     disposeBag.add(publishSubject.filter { it is RepositoryListInput.SEARCH }.subscribe { func((it as RepositoryListInput.SEARCH).query) })
   }

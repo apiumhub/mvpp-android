@@ -5,8 +5,7 @@ import com.apiumhub.github.domain.repository.list.RepositoryListService
 
 
 sealed class RepositoryListInput {
-  object FIND_ALL : RepositoryListInput()
-  class SEARCH(val query: String) : RepositoryListInput()
+  class SEARCH(val query: String = "") : RepositoryListInput()
 }
 
 sealed class RepositoryListOutput {
@@ -21,7 +20,6 @@ sealed class RepositoryListOutput {
 
 interface RepositoryListView {
   //input
-  fun findAll(func: () -> Unit)
   fun search(func: (String) -> Unit)
 
   //output
@@ -39,7 +37,6 @@ interface RepositoryListView {
 
 class RepositoryListPresenter(view: RepositoryListView, service: RepositoryListService) {
   init {
-    view.findAll(service::findAll)
     view.search(service::search)
 
     service.onData(view::onData)
