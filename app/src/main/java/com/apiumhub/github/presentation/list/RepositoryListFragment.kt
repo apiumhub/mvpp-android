@@ -15,6 +15,8 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.content_main.*
+import org.koin.android.ext.android.get
+import org.koin.core.parameter.ParameterList
 import java.util.concurrent.TimeUnit
 
 class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
@@ -24,7 +26,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
   private val publishSubject = PublishSubject.create<RepositoryListInput>()
 
   init {
-    RepositoryListView.createPresenter(this)
+    get<RepositoryListPresenter> { ParameterList(this as RepositoryListView) }
   }
 
   override fun getLayoutId(): Int = R.layout.content_main

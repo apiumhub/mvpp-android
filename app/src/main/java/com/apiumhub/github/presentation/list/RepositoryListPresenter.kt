@@ -3,7 +3,6 @@ package com.apiumhub.github.presentation.list
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.repository.list.RepositoryListService
 
-
 sealed class RepositoryListInput {
   class SEARCH(val query: String = "") : RepositoryListInput()
 }
@@ -31,7 +30,6 @@ interface RepositoryListView {
 
   companion object {
     fun create() = RepositoryListFragment.newInstance()
-    fun createPresenter(view: RepositoryListView) = RepositoryListPresenter(view, RepositoryListService.create())
   }
 }
 

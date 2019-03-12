@@ -25,8 +25,8 @@ interface RepositoryListService {
   fun onStopLoading(func: () -> Unit)
 
   companion object {
-    fun create(): RepositoryListService =
-      RepositoryListServiceImpl(IGithubRepository.create())
+    fun create(repository: IGithubRepository = IGithubRepository.create()): RepositoryListService =
+      RepositoryListServiceImpl(repository)
   }
 }
 
