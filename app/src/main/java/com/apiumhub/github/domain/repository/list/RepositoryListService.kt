@@ -5,10 +5,7 @@ import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.presentation.list.RepositoryListOutput
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.net.UnknownHostException
 
 interface RepositoryListService {
@@ -16,13 +13,14 @@ interface RepositoryListService {
   fun search(query: String)
 
   //output
-  fun onData(func: (List<Repository>) -> Unit)
+  fun onStart(func: () -> Unit)
+  fun onStop(func: () -> Unit)
+
+  fun onDataFound(func: (List<Repository>) -> Unit)
   fun onEmpty(func: () -> Unit)
   fun onErrorNullList(func: () -> Unit)
   fun onErrorNoInternet(func: () -> Unit)
   fun onErrorOther(func: () -> Unit)
-  fun onStartLoading(func: () -> Unit)
-  fun onStopLoading(func: () -> Unit)
 
   companion object {
     fun create(repository: IGithubRepository = IGithubRepository.create()): RepositoryListService =
@@ -40,7 +38,7 @@ class RepositoryListServiceImpl(private val repository: IGithubRepository) :
     GlobalScope.launch(Job() + Dispatchers.Main) {
       subject.onNext(RepositoryListOutput.Start)
 
-      try {
+      try{
         val result = if (query.isNotEmpty()) {
           repository.searchRepositories(query).items
         } else {
@@ -52,20 +50,22 @@ class RepositoryListServiceImpl(private val repository: IGithubRepository) :
           result.isEmpty() -> subject.onNext(RepositoryListOutput.Empty)
           else -> subject.onNext(RepositoryListOutput.Found(result))
         }
-        subject.onNext(RepositoryListOutput.Stop)
-      } catch (exception: Exception) {
-        if (exception is UnknownHostException) {
-          subject.onNext(RepositoryListOutput.ErrorNoInternet)
-        } else {
-          subject.onNext(RepositoryListOutput.ErrorOther)
-        }
-        subject.onNext(RepositoryListOutput.Stop)
+
+      }catch (exception: Exception) {
+        if (exception is UnknownHostException) subject.onNext(RepositoryListOutput.ErrorNoInternet)
+        else subject.onNext(RepositoryListOutput.ErrorOther)
       }
+
+      subject.onNext(RepositoryListOutput.Stop)
     }
   }
 
   // output events
-  override fun onData(func: (List<Repository>) -> Unit) {
+  override fun onStart(func: () -> Unit) {
+    disposeBag.add(subject.filter { it is RepositoryListOutput.Start }.subscribe { func() })
+  }
+
+  override fun onDataFound(func: (List<Repository>) -> Unit) {
     disposeBag.add(subject.filter { it is RepositoryListOutput.Found }.subscribe { func((it as RepositoryListOutput.Found).list) })
   }
 
@@ -85,11 +85,7 @@ class RepositoryListServiceImpl(private val repository: IGithubRepository) :
     disposeBag.add(subject.filter { it is RepositoryListOutput.ErrorOther }.subscribe { func() })
   }
 
-  override fun onStartLoading(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListOutput.Start }.subscribe { func() })
-  }
-
-  override fun onStopLoading(func: () -> Unit) {
+  override fun onStop(func: () -> Unit) {
     disposeBag.add(subject.filter { it is RepositoryListOutput.Stop }.subscribe { func() })
   }
 }

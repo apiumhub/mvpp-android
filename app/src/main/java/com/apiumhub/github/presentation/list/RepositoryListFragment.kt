@@ -13,7 +13,6 @@ import com.jakewharton.rxbinding2.widget.RxTextView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.content_main.*
 import org.koin.android.ext.android.get
 import org.koin.core.parameter.ParameterList
@@ -23,7 +22,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
   RepositoryListView {
 
   private val disposeBag = CompositeDisposable()
-  private val publishSubject = PublishSubject.create<RepositoryListInput>()
+  private var onSearch: (String) -> Unit = {}
 
   init {
     get<RepositoryListPresenter> { ParameterList(this as RepositoryListView) }
@@ -37,7 +36,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    event(RepositoryListInput.SEARCH())
+    onSearch("")
 
     setupSearch()
     binding.contentMainList.adapter = adapter
@@ -49,25 +48,25 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
     super.onDestroyView()
   }
 
-  override fun startLoading() {
+  override fun showLoading() {
     progress.visibility = View.VISIBLE
   }
 
-  override fun stopLoading() {
+  override fun hideLoading() {
     progress.visibility = View.GONE
   }
 
-  override fun onEmpty() {
+  override fun showEmpty() {
     adapter.setItems(emptyList())
     adapter.notifyDataSetChanged()
   }
 
-  override fun onData(items: List<Repository>) {
+  override fun showData(items: List<Repository>) {
     adapter.setItems(items)
     adapter.notifyDataSetChanged()
   }
 
-  override fun onError() {
+  override fun showError() {
     Toast.makeText(context, "generic error", Toast.LENGTH_SHORT).show()
   }
 
@@ -79,17 +78,13 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
       .observeOn(AndroidSchedulers.mainThread())
       .map { it.trim() }
       .subscribe {
-        event(RepositoryListInput.SEARCH(it.trim().toString()))
+        onSearch(it.trim().toString())
       })
-  }
-
-  private fun event(event: RepositoryListInput) {
-    publishSubject.onNext(event)
   }
 
   // subscriptions
   override fun search(func: (String) -> Unit) {
-    disposeBag.add(publishSubject.filter { it is RepositoryListInput.SEARCH }.subscribe { func((it as RepositoryListInput.SEARCH).query) })
+    this.onSearch = func
   }
 
   companion object {
