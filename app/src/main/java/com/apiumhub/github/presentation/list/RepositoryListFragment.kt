@@ -18,8 +18,7 @@ import org.koin.android.ext.android.get
 import org.koin.core.parameter.ParameterList
 import java.util.concurrent.TimeUnit
 
-class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
-  RepositoryListView {
+class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryListView {
 
   private val disposeBag = CompositeDisposable()
   override var onSearch: (String) -> Unit = {}
@@ -83,7 +82,6 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
   }
 
   companion object {
-    fun newInstance(): RepositoryListFragment =
-      RepositoryListFragment()
+    fun newInstance(): RepositoryListFragment = RepositoryListFragment()
   }
 }
