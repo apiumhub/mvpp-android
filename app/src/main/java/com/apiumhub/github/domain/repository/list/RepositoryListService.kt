@@ -2,7 +2,7 @@ package com.apiumhub.github.domain.repository.list
 
 import com.apiumhub.github.data.IGithubRepository
 import com.apiumhub.github.domain.entity.Repository
-import com.apiumhub.github.presentation.list.RepositoryListOutput
+import com.apiumhub.github.presentation.list.RepositoryListEvent
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.*
@@ -31,12 +31,12 @@ interface RepositoryListService {
 class RepositoryListServiceImpl(private val repository: IGithubRepository) :
   RepositoryListService {
 
-  private val subject = PublishSubject.create<RepositoryListOutput>()
+  private val subject = PublishSubject.create<RepositoryListEvent>()
   private val disposeBag = CompositeDisposable()
 
   override fun search(query: String) {
     GlobalScope.launch(Job() + Dispatchers.Main) {
-      subject.onNext(RepositoryListOutput.Start)
+      subject.onNext(RepositoryListEvent.Start)
 
       try{
         val result = if (query.isNotEmpty()) {
@@ -46,46 +46,46 @@ class RepositoryListServiceImpl(private val repository: IGithubRepository) :
         }
 
         when {
-          result == null -> subject.onNext(RepositoryListOutput.ErrorNullList)
-          result.isEmpty() -> subject.onNext(RepositoryListOutput.Empty)
-          else -> subject.onNext(RepositoryListOutput.Found(result))
+          result == null -> subject.onNext(RepositoryListEvent.ErrorNullList)
+          result.isEmpty() -> subject.onNext(RepositoryListEvent.Empty)
+          else -> subject.onNext(RepositoryListEvent.Found(result))
         }
 
       }catch (exception: Exception) {
-        if (exception is UnknownHostException) subject.onNext(RepositoryListOutput.ErrorNoInternet)
-        else subject.onNext(RepositoryListOutput.ErrorOther)
+        if (exception is UnknownHostException) subject.onNext(RepositoryListEvent.ErrorNoInternet)
+        else subject.onNext(RepositoryListEvent.ErrorOther)
       }
 
-      subject.onNext(RepositoryListOutput.Stop)
+      subject.onNext(RepositoryListEvent.Stop)
     }
   }
 
   // output events
   override fun onStart(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListOutput.Start }.subscribe { func() })
+    disposeBag.add(subject.filter { it is RepositoryListEvent.Start }.subscribe { func() })
   }
 
   override fun onDataFound(func: (List<Repository>) -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListOutput.Found }.subscribe { func((it as RepositoryListOutput.Found).list) })
+    disposeBag.add(subject.filter { it is RepositoryListEvent.Found }.subscribe { func((it as RepositoryListEvent.Found).list) })
   }
 
   override fun onEmpty(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListOutput.Empty }.subscribe { func() })
+    disposeBag.add(subject.filter { it is RepositoryListEvent.Empty }.subscribe { func() })
   }
 
   override fun onErrorNullList(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListOutput.ErrorNullList }.subscribe { func() })
+    disposeBag.add(subject.filter { it is RepositoryListEvent.ErrorNullList }.subscribe { func() })
   }
 
   override fun onErrorNoInternet(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListOutput.ErrorNoInternet }.subscribe { func() })
+    disposeBag.add(subject.filter { it is RepositoryListEvent.ErrorNoInternet }.subscribe { func() })
   }
 
   override fun onErrorOther(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListOutput.ErrorOther }.subscribe { func() })
+    disposeBag.add(subject.filter { it is RepositoryListEvent.ErrorOther }.subscribe { func() })
   }
 
   override fun onStop(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListOutput.Stop }.subscribe { func() })
+    disposeBag.add(subject.filter { it is RepositoryListEvent.Stop }.subscribe { func() })
   }
 }

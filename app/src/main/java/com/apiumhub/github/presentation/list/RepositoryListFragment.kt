@@ -22,7 +22,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
   RepositoryListView {
 
   private val disposeBag = CompositeDisposable()
-  private var onSearch: (String) -> Unit = {}
+  override var onSearch: (String) -> Unit = {}
 
   init {
     get<RepositoryListPresenter> { ParameterList(this as RepositoryListView) }
@@ -80,11 +80,6 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(),
       .subscribe {
         onSearch(it.trim().toString())
       })
-  }
-
-  // subscriptions
-  override fun search(func: (String) -> Unit) {
-    this.onSearch = func
   }
 
   companion object {

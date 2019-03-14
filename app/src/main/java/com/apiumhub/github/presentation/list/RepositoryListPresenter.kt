@@ -3,23 +3,19 @@ package com.apiumhub.github.presentation.list
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.repository.list.RepositoryListService
 
-sealed class RepositoryListInput {
-  class SEARCH(val query: String = "") : RepositoryListInput()
-}
-
-sealed class RepositoryListOutput {
-  class Found(val list: List<Repository>) : RepositoryListOutput()
-  object Empty : RepositoryListOutput()
-  object ErrorNullList : RepositoryListOutput()
-  object ErrorNoInternet : RepositoryListOutput()
-  object ErrorOther : RepositoryListOutput()
-  object Start : RepositoryListOutput()
-  object Stop : RepositoryListOutput()
+sealed class RepositoryListEvent {
+  class Found(val list: List<Repository>) : RepositoryListEvent()
+  object Empty : RepositoryListEvent()
+  object ErrorNullList : RepositoryListEvent()
+  object ErrorNoInternet : RepositoryListEvent()
+  object ErrorOther : RepositoryListEvent()
+  object Start : RepositoryListEvent()
+  object Stop : RepositoryListEvent()
 }
 
 interface RepositoryListView {
   //input
-  fun search(func: (String) -> Unit)
+  var onSearch: (String) -> Unit
 
   //output
   fun showData(data: List<Repository>)
@@ -35,7 +31,7 @@ interface RepositoryListView {
 
 class RepositoryListPresenter(view: RepositoryListView, service: RepositoryListService) {
   init {
-    view.search(service::search)
+    view.onSearch = service::search
 
     service.onStart(view::showLoading)
     service.onStop(view::hideLoading)
