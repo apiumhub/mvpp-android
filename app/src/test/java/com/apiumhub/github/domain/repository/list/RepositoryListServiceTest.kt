@@ -1,6 +1,6 @@
 package com.apiumhub.github.domain.repository.list
 
-import com.apiumhub.github.data.IGithubRepository
+import com.apiumhub.github.data.GithubRepository
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.entity.RepositorySearchDto
 import io.mockk.coEvery
@@ -15,7 +15,7 @@ import java.util.concurrent.CountDownLatch
 
 class RepositoryListServiceTest {
 
-  private val repository: IGithubRepository = mockk()
+  private val repository: GithubRepository = mockk()
   private val subject: PublishSubject<RepositoryListEvent> = PublishSubject.create()
 
   lateinit var sut: RepositoryListService

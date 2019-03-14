@@ -3,11 +3,11 @@ package com.apiumhub.github
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
-import com.apiumhub.github.data.IGithubRepository
 import com.apiumhub.github.presentation.errors.GenericErrorsPresenter
 import com.apiumhub.github.presentation.errors.IErrorsInteractor
 import com.apiumhub.github.presentation.errors.IErrorsView
 import com.apiumhub.github.presentation.list.RepositoryListView
+import io.reactivex.Observable
 
 class MainActivity : AppCompatActivity(), IErrorsView {
 
@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity(), IErrorsView {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
     setContentFragment()
-    GenericErrorsPresenter(this, IErrorsInteractor.create(IGithubRepository.errorsStream))
+    GenericErrorsPresenter(this, IErrorsInteractor.create(Observable.empty()))
   }
 
   private fun setContentFragment() {

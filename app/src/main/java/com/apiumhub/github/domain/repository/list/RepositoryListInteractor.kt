@@ -1,7 +1,8 @@
 package com.apiumhub.github.domain.repository.list
 
-import com.apiumhub.github.data.IGithubRepository
+import com.apiumhub.github.data.GithubRepository
 import com.apiumhub.github.domain.entity.Repository
+import com.apiumhub.github.domain.repository.common.EventService
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -21,25 +22,24 @@ sealed class RepositoryListEvent {
   object Stop : RepositoryListEvent()
 }
 
-interface RepositoryListService {
-  fun search(query: String)
 
-  fun onStart(func: () -> Unit)
-  fun onStop(func: () -> Unit)
+interface RepositoryListService : EventService {
+  fun search(query: String)
   fun onDataFound(func: (List<Repository>) -> Unit)
-  fun onEmpty(func: () -> Unit)
-  fun onErrorNullList(func: () -> Unit)
-  fun onErrorNoInternet(func: () -> Unit)
-  fun onErrorOther(func: () -> Unit)
+
 
   companion object {
-    fun create(repository: IGithubRepository, subject: PublishSubject<RepositoryListEvent>, dispatcher: CoroutineDispatcher): RepositoryListService =
-      RepositoryListServiceImpl(repository,subject, dispatcher)
+    fun create(
+      repository: GithubRepository,
+      subject: PublishSubject<RepositoryListEvent>,
+      dispatcher: CoroutineDispatcher
+    ): RepositoryListService =
+      RepositoryListInteractor(repository, subject, dispatcher)
   }
 }
 
-class RepositoryListServiceImpl(
-  private val repository: IGithubRepository,
+class RepositoryListInteractor(
+  private val repository: GithubRepository,
   private val subject: PublishSubject<RepositoryListEvent>,
   private val dispatcher: CoroutineDispatcher
 ) : RepositoryListService, CoroutineScope {
@@ -78,6 +78,9 @@ class RepositoryListServiceImpl(
     }
   }
 
+  override fun cancel() {
+    job.cancel()
+  }
 
   // output events
   override fun onStart(func: () -> Unit) {

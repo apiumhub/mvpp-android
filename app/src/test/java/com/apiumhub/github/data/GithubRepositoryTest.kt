@@ -1,35 +1,23 @@
 package com.apiumhub.github.data
 
 import com.apiumhub.github.DataProvider
-import com.apiumhub.github.domain.entity.Repository
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
-import io.reactivex.Observable
-import io.reactivex.subjects.PublishSubject
 import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
-import okhttp3.ResponseBody
 import org.junit.Before
 import org.junit.Test
-import retrofit2.HttpException
-import retrofit2.Response
-import java.util.concurrent.CountDownLatch
 
 
 class GithubRepositoryTest {
   private val api = mockk<GithubApi>()
 
-  private lateinit var sut: IGithubRepository
-
-  private val errorsStream = PublishSubject.create<Throwable>()
+  private lateinit var sut: GithubRepository
 
   @Before
   fun setUp() {
-    sut = IGithubRepository.create(api, errorsStream)
+    sut = GithubRepository.create(api)
   }
 
 //  @Test
@@ -66,21 +54,21 @@ class GithubRepositoryTest {
     assertEquals(expected, actual)
   }
 
-  @Test
-  fun `should find all commits when returned data from api`() {
-    val countDownLatch = CountDownLatch(1)
-    val expected = Response.success(DataProvider.commitsDto)
-    val user = "someUser"
-    val repository = "someRepository"
-
-    every { api.getCommitsForRepository(user, repository) } returns Observable.just(expected)
-
-    sut.getCommitsForRepository(user, repository).subscribe {
-      verify { api.getCommitsForRepository(user, repository) }
-      assertEquals(expected.body(), it)
-      countDownLatch.countDown()
-    }
-
-    countDownLatch.await()
-  }
+//  @Test
+//  fun `should find all commits when returned data from api`() {
+//    val countDownLatch = CountDownLatch(1)
+//    val expected = Response.success(DataProvider.commitsDto)
+//    val user = "someUser"
+//    val repository = "someRepository"
+//
+//    every { api.getCommitsForRepository(user, repository) } returns Observable.just(expected)
+//
+//    sut.getCommitsForRepository(user, repository).subscribe {
+//      verify { api.getCommitsForRepository(user, repository) }
+//      assertEquals(expected.body(), it)
+//      countDownLatch.countDown()
+//    }
+//
+//    countDownLatch.await()
+//  }
 }
