@@ -3,16 +3,6 @@ package com.apiumhub.github.presentation.list
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.repository.list.RepositoryListService
 
-sealed class RepositoryListEvent {
-  class Found(val list: List<Repository>) : RepositoryListEvent()
-  object Empty : RepositoryListEvent()
-  object ErrorNullList : RepositoryListEvent()
-  object ErrorNoInternet : RepositoryListEvent()
-  object ErrorOther : RepositoryListEvent()
-  object Start : RepositoryListEvent()
-  object Stop : RepositoryListEvent()
-}
-
 interface RepositoryListView {
   //input
   var onSearch: (String) -> Unit

@@ -2,7 +2,6 @@ package com.apiumhub.github.domain.repository.list
 
 import com.apiumhub.github.data.IGithubRepository
 import com.apiumhub.github.domain.entity.Repository
-import com.apiumhub.github.presentation.list.RepositoryListEvent
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -11,6 +10,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.net.UnknownHostException
 import kotlin.coroutines.CoroutineContext
+
+sealed class RepositoryListEvent {
+  class Found(val list: List<Repository>) : RepositoryListEvent()
+  object Empty : RepositoryListEvent()
+  object ErrorNull : RepositoryListEvent()
+  object ErrorNoInternet : RepositoryListEvent()
+  object ErrorOther : RepositoryListEvent()
+  object Start : RepositoryListEvent()
+  object Stop : RepositoryListEvent()
+}
 
 interface RepositoryListService {
   fun search(query: String)
@@ -52,14 +61,17 @@ class RepositoryListServiceImpl(
         }
 
         when {
-          result == null -> subject.onNext(RepositoryListEvent.ErrorNullList)
+          result == null -> subject.onNext(RepositoryListEvent.ErrorNull)
           result.isEmpty() -> subject.onNext(RepositoryListEvent.Empty)
           else -> subject.onNext(RepositoryListEvent.Found(result))
         }
 
       } catch (exception: Exception) {
-        if (exception is UnknownHostException) subject.onNext(RepositoryListEvent.ErrorNoInternet)
-        else subject.onNext(RepositoryListEvent.ErrorOther)
+        when (exception) {
+          is IllegalArgumentException -> subject.onNext(RepositoryListEvent.ErrorNull)
+          is UnknownHostException -> subject.onNext(RepositoryListEvent.ErrorNoInternet)
+          else -> subject.onNext(RepositoryListEvent.ErrorOther)
+        }
       }
 
       subject.onNext(RepositoryListEvent.Stop)
@@ -81,7 +93,7 @@ class RepositoryListServiceImpl(
   }
 
   override fun onErrorNullList(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListEvent.ErrorNullList }.subscribe { func() })
+    disposeBag.add(subject.filter { it is RepositoryListEvent.ErrorNull }.subscribe { func() })
   }
 
   override fun onErrorNoInternet(func: () -> Unit) {
