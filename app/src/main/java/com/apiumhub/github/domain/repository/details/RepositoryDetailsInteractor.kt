@@ -53,24 +53,46 @@ class RepositoryDetailsInteractor(
   override fun getRepositoryDetails(user: String, repositoryName: String) {
     launch {
       subject.onNext(RepositoryDetailsEvent.Start)
-      try {
-        val commitsInternal = repository.getCommitsForRepository(user, repositoryName)
-        val branchesInternal = repository.getBranchesForRepository(user, repositoryName)
-
-        val readmeInternal = repository.getReadmeForRepository(user, repositoryName)
-        subject.onNext(RepositoryDetailsEvent.ReadmeLoaded(readmeInternal))
-        val result = RepositoryDetailsDto(commitsInternal.size, branchesInternal.size)
-        subject.onNext(RepositoryDetailsEvent.DetailsLoaded(result))
-      } catch (exception: Exception) {
-        when (exception) {
-          is IllegalArgumentException -> subject.onNext(RepositoryDetailsEvent.ErrorNull)
-          is UnknownHostException -> subject.onNext(RepositoryDetailsEvent.ErrorNoInternet)
-          else -> subject.onNext(RepositoryDetailsEvent.ErrorOther)
-        }
-      }
+      getReadmeInternal(user, repositoryName)
+      getDetailsInternal(user, repositoryName)
       subject.onNext(RepositoryDetailsEvent.Stop)
     }
   }
+
+  private suspend fun getReadmeInternal(user: String, repositoryName: String) {
+    try {
+      val readmeInternal = repository.getReadmeForRepository(user, repositoryName)
+      subject.onNext(RepositoryDetailsEvent.ReadmeLoaded(readmeInternal))
+    } catch (exception: Exception) {
+      when (exception) {
+        is IllegalArgumentException -> subject.onNext(RepositoryDetailsEvent.ErrorNull)
+        is UnknownHostException -> subject.onNext(RepositoryDetailsEvent.ErrorNoInternet)
+        else -> subject.onNext(RepositoryDetailsEvent.ErrorOther)
+      }
+    }
+  }
+
+  private suspend fun getDetailsInternal(user: String, repositoryName: String) {
+    try {
+      val result = RepositoryDetailsDto(
+        getCommitsInternalCount(user, repositoryName),
+        getBranchesInternalCount(user, repositoryName)
+      )
+      subject.onNext(RepositoryDetailsEvent.DetailsLoaded(result))
+    } catch (exception: Exception) {
+      when (exception) {
+        is IllegalArgumentException -> subject.onNext(RepositoryDetailsEvent.ErrorNull)
+        is UnknownHostException -> subject.onNext(RepositoryDetailsEvent.ErrorNoInternet)
+        else -> subject.onNext(RepositoryDetailsEvent.ErrorOther)
+      }
+    }
+  }
+
+  private suspend fun getCommitsInternalCount(user: String, repositoryName: String): Int =
+    repository.getCommitsForRepository(user, repositoryName).size
+
+  private suspend fun getBranchesInternalCount(user: String, repositoryName: String): Int =
+    repository.getBranchesForRepository(user, repositoryName).size
 
 //  private fun getCommitsInternal(user: String, repositoryName: String) {
 //    disposeBag.add(repository

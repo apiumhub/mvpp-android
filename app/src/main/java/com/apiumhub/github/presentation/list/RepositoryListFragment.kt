@@ -22,6 +22,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
 
   private val disposeBag = CompositeDisposable()
   override var onSearch: (String) -> Unit = {}
+  override var onDestroy: () -> Unit = {}
 
   init {
     get<RepositoryListPresenter> { ParameterList(this as RepositoryListView) }
@@ -43,6 +44,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
   }
 
   override fun onDestroyView() {
+    onDestroy()
     disposeBag.clear()
     super.onDestroyView()
   }

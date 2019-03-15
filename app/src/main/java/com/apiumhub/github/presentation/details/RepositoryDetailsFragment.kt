@@ -16,7 +16,8 @@ class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(), IRep
     get<RepositoryDetailsPresenter> { ParameterList(this as IRepositoryDetailsView) }
   }
 
-  override var loadRepositoryDetails: (String, String) -> Unit = { _: String, _: String -> }
+  override var onLoadRepositoryDetails: (String, String) -> Unit = { _: String, _: String -> }
+  override var onDestroy: () -> Unit = {}
 
   override fun getLayoutId(): Int = R.layout.repository_details
 
@@ -29,7 +30,12 @@ class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(), IRep
     binding.repositoryDetailsAuthor.text = repository.name
     binding.repositoryDetailsDescription.text = repository.description
 
-    loadRepositoryDetails(repository.owner?.login!!, repository.name!!)
+    onLoadRepositoryDetails(repository.owner?.login!!, repository.name!!)
+  }
+
+  override fun onDestroyView() {
+    onDestroy()
+    super.onDestroyView()
   }
 
   override fun repositoryInformationLoaded(details: RepositoryDetailsDto) {

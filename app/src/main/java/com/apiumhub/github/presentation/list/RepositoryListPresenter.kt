@@ -6,6 +6,7 @@ import com.apiumhub.github.domain.repository.list.RepositoryListService
 interface RepositoryListView {
   //input
   var onSearch: (String) -> Unit
+  var onDestroy: () -> Unit
 
   //output
   fun showData(data: List<Repository>)
@@ -22,6 +23,7 @@ interface RepositoryListView {
 class RepositoryListPresenter(view: RepositoryListView, service: RepositoryListService) {
   init {
     view.onSearch = service::search
+    view.onDestroy = service::cancel
 
     service.onStart(view::showLoading)
     service.onStop(view::hideLoading)
