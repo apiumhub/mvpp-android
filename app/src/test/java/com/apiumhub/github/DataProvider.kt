@@ -7,8 +7,8 @@ import java.io.File
 
 object DataProvider {
 
-  val repositories = getEntityFromJson<List<Repository>>("repositories.json")
-  val commitsDto = getEntityFromJson<List<CommitsDto>>("commits_activity.json")
+  val repositories = getEntityFromJson<List<Repository>>("fakeserver/json/repositories.json")
+  val commitsDto = getEntityFromJson<List<CommitsDto>>("fakeserver/json/commit_activity.json")
 
   private inline fun <reified T> getEntityFromJson(json: String): T =
     Gson().fromJson(getResource(json).readText(), T::class.java)
