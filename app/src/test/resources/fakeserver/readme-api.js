@@ -1,4 +1,4 @@
-const json = require("./json/readme.json");
+import * as TestTemplate from './response/readme.html';
 
 module.exports = {
    path: '/repos/:owner/:repository/readme',
@@ -6,5 +6,5 @@ module.exports = {
         res.status(200);
         next();
      },
-   template: json
+   template: """"""
 };

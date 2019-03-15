@@ -1,4 +1,4 @@
-const json = require("./json/commit_activity.json");
+const json = require("./response/commit_activity.json");
 
 module.exports = {
    path: '/repos/:owner/:repository/stats/commit_activity',

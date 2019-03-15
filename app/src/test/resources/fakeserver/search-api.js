@@ -1,4 +1,4 @@
-const json = require("./json/search.json");
+const json = require("./response/search.json");
 
 module.exports = {
    path: '/search/repositories',

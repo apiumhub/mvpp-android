@@ -1,5 +1,6 @@
 package com.apiumhub.github.data
 
+import com.apiumhub.github.BuildConfig
 import com.apiumhub.github.domain.entity.BranchDto
 import com.apiumhub.github.domain.entity.CommitsDto
 import com.apiumhub.github.domain.entity.Repository
@@ -37,7 +38,7 @@ interface GithubApi {
 
   companion object {
 
-    fun create(baseUrl: String = "https://api.github.com"): GithubApi {
+    fun create(baseUrl: String = BuildConfig.BASE_URL): GithubApi {
       val client = OkHttpClient
         .Builder()
         .addInterceptor(

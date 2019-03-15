@@ -1,4 +1,4 @@
-const json = require("./json/branches.json");
+const json = require("./response/branches.json");
 
 module.exports = {
    path: '/repos/:owner/:repository/branches',

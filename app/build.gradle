@@ -24,6 +24,22 @@ android {
   dataBinding {
     enabled = true
   }
+
+  flavorDimensions "github"
+
+  productFlavors {
+    fake {
+      dimension "github"
+      buildConfigField "String", "BASE_URL", "\"http://10.0.2.2:8080\""
+      applicationIdSuffix ".fake"
+      versionNameSuffix "-fake"
+    }
+
+    classic {
+      dimension "github"
+      buildConfigField "String", "BASE_URL", "\"https://api.github.com\""
+    }
+  }
 }
 
 allOpen {
