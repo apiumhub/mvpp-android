@@ -5,6 +5,7 @@ import com.apiumhub.github.domain.entity.CommitsDto
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.entity.RepositorySearchDto
 import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 import java.util.concurrent.TimeUnit
 
 interface GithubRepository {
@@ -15,39 +16,48 @@ interface GithubRepository {
   fun getReadmeForRepository(user: String, repository: String): Observable<String>
 
   companion object {
-    fun create(api: GithubApi): GithubRepository = GithubDataSource(api)
+    fun create(api: GithubApi, errorsStream: PublishSubject<Throwable>): GithubRepository =
+      GithubDataSource(api, errorsStream)
   }
 }
 
-class GithubDataSource(private val api: GithubApi) : GithubRepository {
+class GithubDataSource(private val api: GithubApi, private val errorsStream: PublishSubject<Throwable>) :
+  GithubRepository {
 
   override fun findAllRepositories() =
-    api.findAllRepositories()
+    executeRequest(api.findAllRepositories())
 
   override fun searchRepositories(query: String) =
-    api.searchRepositories(query)
+    executeRequest(api.searchRepositories(query))
 
   override fun getCommitsForRepository(user: String, repository: String) =
-    api.getCommitsForRepository(user, repository)
+    executeRequest(api.getCommitsForRepository(user, repository)
       .doOnNext { if (it.code() == 202) throw StatsCachingException() }
       .retryWhen {
-        var retryCount = 0
-        var maxRetries = 3
-        var delaySeconds = 3L
-
-        it.flatMap {
-          if (it is StatsCachingException) {
-            if (++retryCount < maxRetries) {
-              return@flatMap Observable.timer(delaySeconds, TimeUnit.SECONDS)
-            }
-          }
-          return@flatMap Observable.error<Throwable>(it)
-        }
-      }.map { it.body()?.let { list -> list } ?: emptyList() }
+        it.flatMap { throwable -> retryThrowable(throwable, throwable is StatsCachingException) }
+      }.map { it.body()?.let { list -> list } ?: emptyList() }, emptyList()
+    )
 
   override fun getBranchesForRepository(user: String, repository: String) =
-    api.getBranchesForRepository(user, repository)
+    executeRequest(api.getBranchesForRepository(user, repository), emptyList())
 
   override fun getReadmeForRepository(user: String, repository: String) =
-    api.getReadmeForRepository(user, repository)
+    executeRequest(api.getReadmeForRepository(user, repository))
+
+  private fun <T> executeRequest(request: Observable<T>, returnOnError: T? = null): Observable<T> {
+    return request.onErrorReturn {
+      errorsStream.onNext(it)
+      returnOnError
+    }
+  }
+
+  private fun retryThrowable(
+    throwable: Throwable, condition: Boolean, maxRetries: Int = 3, delaySeconds: Long = 3L
+  ): Observable<Long>? {
+    var retryCount = 0
+
+    return if (condition && ++retryCount < maxRetries) {
+      Observable.timer(delaySeconds, TimeUnit.SECONDS)
+    } else Observable.error(throwable)
+  }
 }
