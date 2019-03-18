@@ -24,7 +24,7 @@ sealed class RepositoryListEvent {
 
 
 interface RepositoryListService : EventService {
-  fun search(query: String)
+  fun search(query: CharSequence)
   fun onDataFound(func: (List<Repository>) -> Unit)
 
 
@@ -49,13 +49,14 @@ class RepositoryListInteractor(
 
   private val disposeBag = CompositeDisposable()
 
-  override fun search(query: String) {
+  override fun search(query: CharSequence) {
     launch {
       subject.onNext(RepositoryListEvent.Start)
 
       try {
-        val result = if (query.isNotEmpty()) {
-          repository.searchRepositories(query).items
+        val text = query.trim().toString()
+        val result = if (text.isNotEmpty()) {
+          repository.searchRepositories(text).items
         } else {
           repository.findAllRepositories()
         }
@@ -83,31 +84,37 @@ class RepositoryListInteractor(
   }
 
   // output events
-  override fun onStart(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListEvent.Start }.subscribe { func() })
-  }
 
   override fun onDataFound(func: (List<Repository>) -> Unit) {
     disposeBag.add(subject.filter { it is RepositoryListEvent.Found }.subscribe { func((it as RepositoryListEvent.Found).list) })
   }
 
-  override fun onEmpty(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListEvent.Empty }.subscribe { func() })
-  }
-
-  override fun onErrorNullList(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListEvent.ErrorNull }.subscribe { func() })
-  }
-
-  override fun onErrorNoInternet(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListEvent.ErrorNoInternet }.subscribe { func() })
-  }
-
-  override fun onErrorOther(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListEvent.ErrorOther }.subscribe { func() })
+  override fun onStart(func: () -> Unit) {
+    subscribeEvent(RepositoryListEvent.Start, func)
   }
 
   override fun onStop(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryListEvent.Stop }.subscribe { func() })
+    subscribeEvent(RepositoryListEvent.Stop, func)
+  }
+
+
+  override fun onEmpty(func: () -> Unit) {
+    subscribeEvent(RepositoryListEvent.Empty, func)
+  }
+
+  override fun onErrorNullList(func: () -> Unit) {
+    subscribeEvent(RepositoryListEvent.ErrorNull, func)
+  }
+
+  override fun onErrorNoInternet(func: () -> Unit) {
+    subscribeEvent(RepositoryListEvent.ErrorNoInternet, func)
+  }
+
+  override fun onErrorOther(func: () -> Unit) {
+    subscribeEvent(RepositoryListEvent.ErrorOther, func)
+  }
+
+  private fun subscribeEvent(event: RepositoryListEvent, func: () -> Unit) {
+    disposeBag.add(subject.filter { it == event }.subscribe { func() })
   }
 }

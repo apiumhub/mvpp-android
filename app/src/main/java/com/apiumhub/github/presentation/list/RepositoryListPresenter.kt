@@ -1,29 +1,11 @@
 package com.apiumhub.github.presentation.list
 
-import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.repository.list.RepositoryListService
-
-interface RepositoryListView {
-  //input
-  var onSearch: (String) -> Unit
-  var onDestroy: () -> Unit
-
-  //output
-  fun showData(data: List<Repository>)
-  fun showEmpty()
-  fun showError()
-  fun showLoading()
-  fun hideLoading()
-
-  companion object {
-    fun create() = RepositoryListFragment.newInstance()
-  }
-}
 
 class RepositoryListPresenter(view: RepositoryListView, service: RepositoryListService) {
   init {
-    view.onSearch = service::search
-    view.onDestroy = service::cancel
+    view.onSearch(service::search)
+    view.onDestroy(service::cancel)
 
     service.onStart(view::showLoading)
     service.onStop(view::hideLoading)
@@ -35,4 +17,3 @@ class RepositoryListPresenter(view: RepositoryListView, service: RepositoryListS
     service.onErrorOther(view::showError)
   }
 }
-
