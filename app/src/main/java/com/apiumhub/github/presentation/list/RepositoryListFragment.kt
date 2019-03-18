@@ -10,6 +10,8 @@ import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.presentation.Navigator
 import com.apiumhub.github.presentation.base.BaseFragment
 import com.apiumhub.github.presentation.base.EventView
+import com.apiumhub.github.presentation.details.RepositoryDetailsPresenter
+import com.apiumhub.github.presentation.details.RepositoryDetailsView
 import com.jakewharton.rxbinding2.widget.RxTextView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -31,10 +33,6 @@ interface RepositoryListView : EventView {
 class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryListView {
   private val subject: PublishSubject<CharSequence> = PublishSubject.create()
 
-  init {
-    get<RepositoryListPresenter> { ParameterList(this as RepositoryListView) }
-  }
-
   override fun getLayoutId(): Int = R.layout.content_main
 
   private val adapter = RepoListAdapter(disposeBag) {
@@ -43,6 +41,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    get<RepositoryListPresenter> { ParameterList(this as RepositoryListView)}
     subject.onNext("")
 
     setupSearch()

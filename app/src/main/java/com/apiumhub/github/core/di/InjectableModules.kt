@@ -8,7 +8,6 @@ import com.apiumhub.github.presentation.details.RepositoryDetailsPresenter
 import com.apiumhub.github.presentation.list.RepositoryListPresenter
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
 import org.koin.dsl.module.module
 
 val apiModule = module {
@@ -16,7 +15,7 @@ val apiModule = module {
 }
 
 val repositoriesModule = module {
-  factory { GithubRepository.create(get(), PublishSubject.create()) }
+  factory { GithubRepository.create(get()) }
 }
 
 val servicesModule = module {

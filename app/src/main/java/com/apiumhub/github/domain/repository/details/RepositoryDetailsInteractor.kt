@@ -2,8 +2,8 @@ package com.apiumhub.github.domain.repository.details
 
 import com.apiumhub.github.data.GithubRepository
 import com.apiumhub.github.domain.entity.RepositoryDetailsDto
-import com.apiumhub.github.domain.repository.EventInteractor
-import com.apiumhub.github.domain.repository.EventService
+import com.apiumhub.github.domain.repository.BaseInteractor
+import com.apiumhub.github.domain.repository.BaseService
 import io.reactivex.Scheduler
 import io.reactivex.rxkotlin.Observables
 import io.reactivex.subjects.PublishSubject
@@ -13,7 +13,7 @@ sealed class RepositoryDetailsEvent {
   class ReadmeLoaded(val readme: String) : RepositoryDetailsEvent()
 }
 
-interface RepositoryDetailsService : EventService {
+interface RepositoryDetailsService : BaseService {
   fun getRepositoryDetails(user: String, repositoryName: String)
 
   fun onDetailsLoaded(func: (details: RepositoryDetailsDto) -> Unit)
@@ -32,7 +32,7 @@ class RepositoryDetailsInteractor(
   private val repository: GithubRepository,
   observeOn: Scheduler,
   subscribeOn: Scheduler
-) : EventInteractor(observeOn, subscribeOn), RepositoryDetailsService {
+) : BaseInteractor(observeOn, subscribeOn), RepositoryDetailsService {
 
   private val stream: PublishSubject<RepositoryDetailsEvent> = PublishSubject.create()
 

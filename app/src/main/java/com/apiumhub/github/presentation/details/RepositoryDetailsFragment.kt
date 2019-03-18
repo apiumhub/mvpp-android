@@ -19,27 +19,19 @@ interface RepositoryDetailsView : EventView {
   fun readmeLoaded(readme: String)
 }
 
-
 class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(), RepositoryDetailsView {
-
-  init {
-    get<RepositoryDetailsPresenter> { ParameterList(this as RepositoryDetailsView) }
-  }
-
-  private val subject: PublishSubject<Pair<String, String>> = PublishSubject.create()
-
   override fun getLayoutId(): Int = R.layout.repository_details
-
-  private lateinit var repository: Repository
+  private val subject: PublishSubject<Pair<String, String>> = PublishSubject.create()
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    repository =
-      arguments?.getParcelable(REPOSITORY_KEY) ?: throw IllegalArgumentException("A valid repository must be provided")
-    binding.repositoryDetailsAuthor.text = repository.name
-    binding.repositoryDetailsDescription.text = repository.description
+    get<RepositoryDetailsPresenter> { ParameterList(this as RepositoryDetailsView) }
 
-    subject.onNext(Pair(repository.owner?.login!!, repository.name!!))
+    arguments?.getParcelable<Repository>(REPOSITORY_KEY)?.let {
+      binding.repositoryDetailsAuthor.text = it.name
+      binding.repositoryDetailsDescription.text = it.description
+      subject.onNext(Pair(it.owner?.login!!, it.name!!))
+    }
   }
 
   override fun repositoryInformationLoaded(details: RepositoryDetailsDto) {

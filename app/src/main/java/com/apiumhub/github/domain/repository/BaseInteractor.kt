@@ -13,7 +13,7 @@ enum class Event {
   EMPTY, ERROR_NULL, ERROR_NO_INTERNET, ERROR_OTHER, START, STOP, UNKNOWN
 }
 
-interface EventService {
+interface BaseService {
   fun cancel()
 
   fun onStart(func: () -> Unit)
@@ -24,9 +24,8 @@ interface EventService {
   fun onErrorOther(func: () -> Unit)
 }
 
-abstract class EventInteractor(private val observeOn: Scheduler, private val subscribeOn: Scheduler) :
-  EventService {
-  private val subject = PublishSubject.create<Event>()
+abstract class BaseInteractor(private val observeOn: Scheduler, private val subscribeOn: Scheduler) : BaseService {
+  protected val subject = PublishSubject.create<Event>()
   protected val disposeBag = CompositeDisposable()
 
   fun <T : Any> execute(observable: Observable<T>, onNext: (T) -> Unit) {
@@ -46,9 +45,10 @@ abstract class EventInteractor(private val observeOn: Scheduler, private val sub
             subject.onNext(Event.STOP)
           },
           onNext = {
-            when (it) {
-              it is List<*> && it.isEmpty() -> subject.onNext(Event.EMPTY)
-              else -> onNext(it)
+            if(it is List<*> && it.isEmpty()) {
+              subject.onNext(Event.EMPTY)
+            } else {
+              onNext(it)
             }
           },
           onComplete = {

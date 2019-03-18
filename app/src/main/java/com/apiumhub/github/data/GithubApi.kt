@@ -8,6 +8,7 @@ import com.apiumhub.github.domain.entity.RepositorySearchDto
 import io.reactivex.Observable
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
@@ -26,7 +27,7 @@ interface GithubApi {
   fun searchRepositories(@Query("q") query: String): Observable<RepositorySearchDto>
 
   @GET("/repos/{owner}/{repository}/stats/commit_activity")
-  fun getCommitsForRepository(@Path("owner") user: String, @Path("repository") repository: String): Observable<List<CommitsDto>>
+  fun getCommitsForRepository(@Path("owner") user: String, @Path("repository") repository: String): Observable<Response<List<CommitsDto>>>
 
   @GET("/repos/{owner}/{repository}/branches")
   fun getBranchesForRepository(@Path("owner") user: String, @Path("repository") repository: String): Observable<List<BranchDto>>

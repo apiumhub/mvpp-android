@@ -5,7 +5,7 @@ import com.apiumhub.github.domain.entity.CommitsDto
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.entity.RepositorySearchDto
 import io.reactivex.Observable
-import io.reactivex.subjects.PublishSubject
+import java.util.concurrent.TimeUnit
 
 interface GithubRepository {
   fun findAllRepositories(): Observable<List<Repository>>
@@ -15,13 +15,11 @@ interface GithubRepository {
   fun getReadmeForRepository(user: String, repository: String): Observable<String>
 
   companion object {
-    fun create(api: GithubApi, errorsStream: PublishSubject<Throwable>): GithubRepository =
-      GithubDataSource(api, errorsStream)
+    fun create(api: GithubApi): GithubRepository = GithubDataSource(api)
   }
 }
 
-class GithubDataSource(private val api: GithubApi, private val errorsStream: PublishSubject<Throwable>) :
-  GithubRepository {
+class GithubDataSource(private val api: GithubApi) : GithubRepository {
 
   override fun findAllRepositories() =
     api.findAllRepositories()
@@ -31,6 +29,21 @@ class GithubDataSource(private val api: GithubApi, private val errorsStream: Pub
 
   override fun getCommitsForRepository(user: String, repository: String) =
     api.getCommitsForRepository(user, repository)
+      .doOnNext { if (it.code() == 202) throw StatsCachingException() }
+      .retryWhen {
+        var retryCount = 0
+        var maxRetries = 3
+        var delaySeconds = 3L
+
+        it.flatMap {
+          if (it is StatsCachingException) {
+            if (++retryCount < maxRetries) {
+              return@flatMap Observable.timer(delaySeconds, TimeUnit.SECONDS)
+            }
+          }
+          return@flatMap Observable.error<Throwable>(it)
+        }
+      }.map { it.body()?.let { list -> list } ?: emptyList() }
 
   override fun getBranchesForRepository(user: String, repository: String) =
     api.getBranchesForRepository(user, repository)
