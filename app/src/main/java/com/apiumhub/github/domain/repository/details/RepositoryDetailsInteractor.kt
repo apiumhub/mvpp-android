@@ -2,25 +2,15 @@ package com.apiumhub.github.domain.repository.details
 
 import com.apiumhub.github.data.GithubRepository
 import com.apiumhub.github.domain.entity.RepositoryDetailsDto
-import com.apiumhub.github.domain.repository.common.EventService
-import io.reactivex.disposables.CompositeDisposable
+import com.apiumhub.github.domain.repository.EventInteractor
+import com.apiumhub.github.domain.repository.EventService
+import io.reactivex.Scheduler
+import io.reactivex.rxkotlin.Observables
 import io.reactivex.subjects.PublishSubject
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import java.net.UnknownHostException
-import kotlin.coroutines.CoroutineContext
 
 sealed class RepositoryDetailsEvent {
   class DetailsLoaded(val details: RepositoryDetailsDto) : RepositoryDetailsEvent()
   class ReadmeLoaded(val readme: String) : RepositoryDetailsEvent()
-  object Empty : RepositoryDetailsEvent()
-  object ErrorNull : RepositoryDetailsEvent()
-  object ErrorNoInternet : RepositoryDetailsEvent()
-  object ErrorOther : RepositoryDetailsEvent()
-  object Start : RepositoryDetailsEvent()
-  object Stop : RepositoryDetailsEvent()
 }
 
 interface RepositoryDetailsService : EventService {
@@ -32,67 +22,49 @@ interface RepositoryDetailsService : EventService {
   companion object {
     fun create(
       repository: GithubRepository,
-      subject: PublishSubject<RepositoryDetailsEvent>,
-      dispatcher: CoroutineDispatcher
-    ): RepositoryDetailsService = RepositoryDetailsInteractor(repository, subject, dispatcher)
+      observeOn: Scheduler,
+      subscribeOn: Scheduler
+    ): RepositoryDetailsService = RepositoryDetailsInteractor(repository, observeOn, subscribeOn)
   }
 }
 
 class RepositoryDetailsInteractor(
   private val repository: GithubRepository,
-  private val subject: PublishSubject<RepositoryDetailsEvent>,
-  private val dispatcher: CoroutineDispatcher
-) : RepositoryDetailsService, CoroutineScope {
+  observeOn: Scheduler,
+  subscribeOn: Scheduler
+) : EventInteractor(observeOn, subscribeOn), RepositoryDetailsService {
 
-  private val job = Job()
-  private val disposeBag = CompositeDisposable()
-
-  override val coroutineContext: CoroutineContext
-    get() = job + dispatcher
+  private val stream: PublishSubject<RepositoryDetailsEvent> = PublishSubject.create()
 
   override fun getRepositoryDetails(user: String, repositoryName: String) {
-    launch {
-      subject.onNext(RepositoryDetailsEvent.Start)
-      getReadmeInternal(user, repositoryName)
-      getDetailsInternal(user, repositoryName)
-      subject.onNext(RepositoryDetailsEvent.Stop)
+    getReadmeInternal(user, repositoryName)
+    getDetailsInternal(user, repositoryName)
+  }
+
+  private fun getReadmeInternal(user: String, repositoryName: String) {
+    execute(repository.getReadmeForRepository(user, repositoryName)) {
+      stream.onNext(RepositoryDetailsEvent.ReadmeLoaded(it))
     }
   }
 
-  private suspend fun getReadmeInternal(user: String, repositoryName: String) {
-    try {
-      val readmeInternal = repository.getReadmeForRepository(user, repositoryName)
-      subject.onNext(RepositoryDetailsEvent.ReadmeLoaded(readmeInternal))
-    } catch (exception: Exception) {
-      when (exception) {
-        is IllegalArgumentException -> subject.onNext(RepositoryDetailsEvent.ErrorNull)
-        is UnknownHostException -> subject.onNext(RepositoryDetailsEvent.ErrorNoInternet)
-        else -> subject.onNext(RepositoryDetailsEvent.ErrorOther)
-      }
+  private fun getDetailsInternal(user: String, repositoryName: String) {
+    val observable = Observables.combineLatest(
+      repository.getCommitsForRepository(user, repositoryName),
+      repository.getBranchesForRepository(user, repositoryName)
+    )
+
+    execute(observable) {
+      stream.onNext(RepositoryDetailsEvent.DetailsLoaded(RepositoryDetailsDto(it.first.size, it.second.size)))
     }
   }
 
-  private suspend fun getDetailsInternal(user: String, repositoryName: String) {
-    try {
-      val result = RepositoryDetailsDto(
-        getCommitsInternalCount(user, repositoryName),
-        getBranchesInternalCount(user, repositoryName)
-      )
-      subject.onNext(RepositoryDetailsEvent.DetailsLoaded(result))
-    } catch (exception: Exception) {
-      when (exception) {
-        is IllegalArgumentException -> subject.onNext(RepositoryDetailsEvent.ErrorNull)
-        is UnknownHostException -> subject.onNext(RepositoryDetailsEvent.ErrorNoInternet)
-        else -> subject.onNext(RepositoryDetailsEvent.ErrorOther)
-      }
-    }
+  override fun onDetailsLoaded(func: (details: RepositoryDetailsDto) -> Unit) {
+    disposeBag.add(stream.filter { it is RepositoryDetailsEvent.DetailsLoaded }.subscribe { func((it as RepositoryDetailsEvent.DetailsLoaded).details) })
   }
 
-  private suspend fun getCommitsInternalCount(user: String, repositoryName: String): Int =
-    repository.getCommitsForRepository(user, repositoryName).size
-
-  private suspend fun getBranchesInternalCount(user: String, repositoryName: String): Int =
-    repository.getBranchesForRepository(user, repositoryName).size
+  override fun onReadmeLoaded(func: (readme: String) -> Unit) {
+    disposeBag.add(stream.filter { it is RepositoryDetailsEvent.ReadmeLoaded }.subscribe { func((it as RepositoryDetailsEvent.ReadmeLoaded).readme) })
+  }
 
 //  private fun getCommitsInternal(user: String, repositoryName: String) {
 //    disposeBag.add(repository
@@ -128,40 +100,4 @@ class RepositoryDetailsInteractor(
 //      }
 //      .subscribe { repositoryDetailsPublishSubject.onNext(it) })
 //  }
-
-  override fun cancel() {
-    job.cancel()
-  }
-
-  override fun onStart(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryDetailsEvent.Start }.subscribe { func() })
-  }
-
-  override fun onEmpty(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryDetailsEvent.Empty }.subscribe { func() })
-  }
-
-  override fun onErrorNullList(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryDetailsEvent.ErrorNull }.subscribe { func() })
-  }
-
-  override fun onErrorNoInternet(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryDetailsEvent.ErrorNoInternet }.subscribe { func() })
-  }
-
-  override fun onErrorOther(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryDetailsEvent.ErrorOther }.subscribe { func() })
-  }
-
-  override fun onStop(func: () -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryDetailsEvent.Stop }.subscribe { func() })
-  }
-
-  override fun onDetailsLoaded(func: (details: RepositoryDetailsDto) -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryDetailsEvent.DetailsLoaded }.subscribe { func((it as RepositoryDetailsEvent.DetailsLoaded).details) })
-  }
-
-  override fun onReadmeLoaded(func: (readme: String) -> Unit) {
-    disposeBag.add(subject.filter { it is RepositoryDetailsEvent.ReadmeLoaded }.subscribe { func((it as RepositoryDetailsEvent.ReadmeLoaded).readme) })
-  }
 }

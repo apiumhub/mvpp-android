@@ -7,17 +7,26 @@ import com.apiumhub.github.databinding.RepositoryDetailsBinding
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.entity.RepositoryDetailsDto
 import com.apiumhub.github.presentation.base.BaseFragment
+import com.apiumhub.github.presentation.base.EventView
+import io.reactivex.subjects.PublishSubject
 import org.koin.android.ext.android.get
 import org.koin.core.parameter.ParameterList
 
-class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(), IRepositoryDetailsView {
+interface RepositoryDetailsView : EventView {
+  fun onLoadRepositoryDetails(func: (String, String) -> Unit)
+
+  fun repositoryInformationLoaded(details: RepositoryDetailsDto)
+  fun readmeLoaded(readme: String)
+}
+
+
+class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(), RepositoryDetailsView {
 
   init {
-    get<RepositoryDetailsPresenter> { ParameterList(this as IRepositoryDetailsView) }
+    get<RepositoryDetailsPresenter> { ParameterList(this as RepositoryDetailsView) }
   }
 
-  override var onLoadRepositoryDetails: (String, String) -> Unit = { _: String, _: String -> }
-  override var onDestroy: () -> Unit = {}
+  private val subject: PublishSubject<Pair<String, String>> = PublishSubject.create()
 
   override fun getLayoutId(): Int = R.layout.repository_details
 
@@ -30,12 +39,7 @@ class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(), IRep
     binding.repositoryDetailsAuthor.text = repository.name
     binding.repositoryDetailsDescription.text = repository.description
 
-    onLoadRepositoryDetails(repository.owner?.login!!, repository.name!!)
-  }
-
-  override fun onDestroyView() {
-    onDestroy()
-    super.onDestroyView()
+    subject.onNext(Pair(repository.owner?.login!!, repository.name!!))
   }
 
   override fun repositoryInformationLoaded(details: RepositoryDetailsDto) {
@@ -45,6 +49,10 @@ class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(), IRep
 
   override fun readmeLoaded(readme: String) {
     binding.repositoryDetailsReadmeWebview.loadData(readme, "text/html", "UTF-8")
+  }
+
+  override fun onLoadRepositoryDetails(func: (String, String) -> Unit) {
+    disposeBag.add(subject.subscribe { func(it.first, it.second) })
   }
 
   companion object {

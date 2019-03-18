@@ -5,8 +5,7 @@ import com.apiumhub.github.domain.entity.BranchDto
 import com.apiumhub.github.domain.entity.CommitsDto
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.entity.RepositorySearchDto
-import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
-import kotlinx.coroutines.Deferred
+import io.reactivex.Observable
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -21,20 +20,20 @@ import retrofit2.http.Query
 interface GithubApi {
 
   @GET("/repositories")
-  fun findAllRepositories(): Deferred<List<Repository>>
+  fun findAllRepositories(): Observable<List<Repository>>
 
   @GET("/search/repositories")
-  fun searchRepositories(@Query("q") query: String): Deferred<RepositorySearchDto>
+  fun searchRepositories(@Query("q") query: String): Observable<RepositorySearchDto>
 
   @GET("/repos/{owner}/{repository}/stats/commit_activity")
-  fun getCommitsForRepository(@Path("owner") user: String, @Path("repository") repository: String): Deferred<List<CommitsDto>>
+  fun getCommitsForRepository(@Path("owner") user: String, @Path("repository") repository: String): Observable<List<CommitsDto>>
 
   @GET("/repos/{owner}/{repository}/branches")
-  fun getBranchesForRepository(@Path("owner") user: String, @Path("repository") repository: String): Deferred<List<BranchDto>>
+  fun getBranchesForRepository(@Path("owner") user: String, @Path("repository") repository: String): Observable<List<BranchDto>>
 
   @GET("repos/{owner}/{repository}/readme")
   @Headers("Accept:application/vnd.github.v3.html")
-  fun getReadmeForRepository(@Path("owner") user: String, @Path("repository") repository: String): Deferred<String>
+  fun getReadmeForRepository(@Path("owner") user: String, @Path("repository") repository: String): Observable<String>
 
   companion object {
 
@@ -50,7 +49,6 @@ interface GithubApi {
 
       val retrofit = Retrofit.Builder()
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-        .addCallAdapterFactory(CoroutineCallAdapterFactory())
         .addConverterFactory(ScalarsConverterFactory.create())//Needed to handle HTML String responses
         .addConverterFactory(GsonConverterFactory.create())
         .client(client)

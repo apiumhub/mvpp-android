@@ -1,4 +1,4 @@
-import * as TestTemplate from './response/readme.html';
+const json = require("./response/branches.json");
 
 module.exports = {
    path: '/repos/:owner/:repository/readme',
@@ -6,5 +6,5 @@ module.exports = {
         res.status(200);
         next();
      },
-   template: """"""
+   template: json
 };

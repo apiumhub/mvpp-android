@@ -7,20 +7,49 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.subjects.PublishSubject
 
-abstract class BaseFragment<Binding : ViewDataBinding>: Fragment() {
+interface EventView {
+  fun onDestroy(func: () -> Unit)
 
-    protected lateinit var binding: Binding
+  fun showEmpty()
+  fun showError()
+  fun showLoading()
+  fun hideLoading()
+}
 
-    abstract fun getLayoutId(): Int
+abstract class BaseFragment<Binding : ViewDataBinding> : Fragment(), EventView {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        binding = DataBindingUtil.inflate(inflater, getLayoutId(), container, false)
-        return binding.root
-    }
+  protected lateinit var binding: Binding
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.setLifecycleOwner(this)
-    }
+  protected val disposeBag = CompositeDisposable()
+  private val destroySubject = PublishSubject.create<Unit>()
+
+  abstract fun getLayoutId(): Int
+
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    binding = DataBindingUtil.inflate(inflater, getLayoutId(), container, false)
+    return binding.root
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    binding.lifecycleOwner = this
+  }
+
+  override fun onDestroyView() {
+    destroySubject.onNext(Unit)
+    disposeBag.clear()
+    super.onDestroyView()
+  }
+
+  override fun showEmpty() {}
+  override fun showError() {}
+  override fun showLoading() {}
+  override fun hideLoading() {}
+
+  override fun onDestroy(func: () -> Unit) {
+    disposeBag.add(destroySubject.subscribe { func() })
+  }
 }
