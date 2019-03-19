@@ -5,6 +5,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.widget.Toast
 import com.apiumhub.github.R
+import com.apiumhub.github.arch.InDelegate
 import com.apiumhub.github.databinding.ContentMainBinding
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.presentation.Navigator
