@@ -5,14 +5,11 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.widget.Toast
 import com.apiumhub.github.R
-import com.apiumhub.github.arch.InDelegate
 import com.apiumhub.github.databinding.ContentMainBinding
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.presentation.Navigator
 import com.apiumhub.github.presentation.base.BaseFragment
 import com.apiumhub.github.presentation.base.EventView
-import com.apiumhub.github.presentation.details.RepositoryDetailsPresenter
-import com.apiumhub.github.presentation.details.RepositoryDetailsView
 import com.jakewharton.rxbinding2.widget.RxTextView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -42,7 +39,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    get<RepositoryListPresenter> { ParameterList(this as RepositoryListView)}
+    get<RepositoryListPresenter> { ParameterList(this as RepositoryListView) }
     subject.onNext("")
 
     setupSearch()

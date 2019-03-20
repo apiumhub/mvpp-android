@@ -2,6 +2,7 @@ package com.apiumhub.github.core.di
 
 import com.apiumhub.github.data.GithubApi
 import com.apiumhub.github.data.GithubRepository
+import com.apiumhub.github.data.oncache.OnMemoryRepository
 import com.apiumhub.github.domain.repository.details.RepositoryDetailsService
 import com.apiumhub.github.domain.repository.list.RepositoryListService
 import com.apiumhub.github.presentation.details.RepositoryDetailsPresenter
@@ -17,6 +18,7 @@ val apiModule = module {
 
 val repositoriesModule = module {
   factory { GithubRepository.create(get(), PublishSubject.create()) }
+  factory { OnMemoryRepository.create() }
 }
 
 val servicesModule = module {
