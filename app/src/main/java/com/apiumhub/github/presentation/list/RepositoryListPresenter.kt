@@ -1,6 +1,6 @@
 package com.apiumhub.github.presentation.list
 
-import com.apiumhub.github.domain.repository.list.RepositoryListService
+import com.apiumhub.github.domain.RepositoryListService
 
 class RepositoryListPresenter(view: RepositoryListView, service: RepositoryListService) {
   init {

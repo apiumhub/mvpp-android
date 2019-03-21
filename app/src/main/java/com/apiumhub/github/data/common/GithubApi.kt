@@ -1,4 +1,4 @@
-package com.apiumhub.github.data
+package com.apiumhub.github.data.common
 
 import com.apiumhub.github.BuildConfig
 import com.apiumhub.github.domain.entity.BranchDto

@@ -1,10 +1,12 @@
 package com.apiumhub.github.core.di
 
-import com.apiumhub.github.data.GithubApi
 import com.apiumhub.github.data.GithubRepository
-import com.apiumhub.github.data.oncache.OnMemoryRepository
-import com.apiumhub.github.domain.repository.details.RepositoryDetailsService
-import com.apiumhub.github.domain.repository.list.RepositoryListService
+import com.apiumhub.github.data.GithubRepositoryListRepository
+import com.apiumhub.github.data.InMemoryRepositoryListRepository
+import com.apiumhub.github.data.RepositoryListRepository
+import com.apiumhub.github.data.common.GithubApi
+import com.apiumhub.github.domain.RepositoryDetailsService
+import com.apiumhub.github.domain.RepositoryListService
 import com.apiumhub.github.presentation.details.RepositoryDetailsPresenter
 import com.apiumhub.github.presentation.list.RepositoryListPresenter
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -18,11 +20,12 @@ val apiModule = module {
 
 val repositoriesModule = module {
   factory { GithubRepository.create(get(), PublishSubject.create()) }
-  factory { OnMemoryRepository.create() }
+  factory { RepositoryListRepository.create() as InMemoryRepositoryListRepository }
+  factory { RepositoryListRepository.create(get(), PublishSubject.create()) as GithubRepositoryListRepository }
 }
 
 val servicesModule = module {
-  factory { RepositoryListService.create(get(), AndroidSchedulers.mainThread(), Schedulers.newThread()) }
+  factory { RepositoryListService.create(get() as GithubRepositoryListRepository, get() as InMemoryRepositoryListRepository, AndroidSchedulers.mainThread(), Schedulers.newThread()) }
   factory { RepositoryDetailsService.create(get(), AndroidSchedulers.mainThread(), Schedulers.newThread()) }
 }
 

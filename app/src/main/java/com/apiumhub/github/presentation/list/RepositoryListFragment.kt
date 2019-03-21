@@ -20,8 +20,8 @@ import org.koin.core.parameter.ParameterList
 import java.util.concurrent.TimeUnit
 
 interface RepositoryListView : EventView {
-  fun onSearch(func: (CharSequence) -> Unit)
-  fun showData(data: List<Repository>)
+  fun onSearch(func: (String) -> Unit)
+  fun showData(items: List<Repository>)
 
   companion object {
     fun create() = RepositoryListFragment.newInstance()
@@ -29,7 +29,7 @@ interface RepositoryListView : EventView {
 }
 
 class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryListView {
-  private val subject: PublishSubject<CharSequence> = PublishSubject.create()
+  private val subject: PublishSubject<String> = PublishSubject.create()
 
   override fun getLayoutId(): Int = R.layout.content_main
 
@@ -47,25 +47,10 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
     binding.contentMainList.layoutManager = LinearLayoutManager(context)
   }
 
-  override fun onSearch(func: (CharSequence) -> Unit) {
-    disposeBag.add(subject.subscribe { func(it) })
-  }
-
+  //region -- View methods --
   override fun showData(items: List<Repository>) {
     adapter.setItems(items)
     adapter.notifyDataSetChanged()
-  }
-
-  private fun setupSearch() {
-    disposeBag.add(RxTextView
-      .textChanges(binding.contentMainSearch)
-      .debounce(300, TimeUnit.MILLISECONDS)
-      .subscribeOn(Schedulers.io())
-      .observeOn(AndroidSchedulers.mainThread())
-      .map { it.trim() }
-      .subscribe {
-        subject.onNext(it)
-      })
   }
 
   override fun showLoading() {
@@ -84,6 +69,31 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
   override fun showError() {
     Toast.makeText(context, "generic error", Toast.LENGTH_SHORT).show()
   }
+  //endregion
+
+  //region -- Event Binding --
+  override fun onSearch(func: (String) -> Unit) {
+    disposeBag.add(subject.subscribe { func(it) })
+  }
+  //endregion
+
+  //region -- Private methods --
+  private fun setupSearch() {
+    disposeBag.add(RxTextView
+      .textChanges(binding.contentMainSearch)
+      .debounce(300, TimeUnit.MILLISECONDS)
+      .subscribeOn(Schedulers.io())
+      .observeOn(AndroidSchedulers.mainThread())
+      .map { it.trim().toString() }
+      .subscribe {
+        if (it.isEmpty()) {
+          subject.onNext("")
+        } else {
+          subject.onNext(it)
+        }
+      })
+  }
+  //endregion
 
   companion object {
     fun newInstance(): RepositoryListFragment = RepositoryListFragment()

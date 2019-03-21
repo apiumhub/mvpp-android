@@ -1,4 +1,4 @@
-package com.apiumhub.github.domain.repository
+package com.apiumhub.github.domain.common
 
 import io.reactivex.Observable
 import io.reactivex.Scheduler
@@ -24,8 +24,9 @@ interface BaseService {
   fun onErrorOther(func: () -> Unit)
 }
 
-abstract class BaseInteractor(private val observeOn: Scheduler, private val subscribeOn: Scheduler) : BaseService {
-  protected val subject = PublishSubject.create<Event>()
+abstract class BaseInteractor(private val observeOn: Scheduler, private val subscribeOn: Scheduler) :
+  BaseService {
+  protected val subject: PublishSubject<Event> = PublishSubject.create()
   protected val disposeBag = CompositeDisposable()
 
   fun <T : Any> execute(observable: Observable<T>, onNext: (T) -> Unit) {
@@ -45,7 +46,7 @@ abstract class BaseInteractor(private val observeOn: Scheduler, private val subs
             subject.onNext(Event.STOP)
           },
           onNext = {
-            if(it is List<*> && it.isEmpty()) {
+            if (it is List<*> && it.isEmpty()) {
               subject.onNext(Event.EMPTY)
             } else {
               onNext(it)

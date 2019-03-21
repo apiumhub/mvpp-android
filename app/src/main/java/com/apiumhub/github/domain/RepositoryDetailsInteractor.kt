@@ -1,9 +1,9 @@
-package com.apiumhub.github.domain.repository.details
+package com.apiumhub.github.domain
 
 import com.apiumhub.github.data.GithubRepository
 import com.apiumhub.github.domain.entity.RepositoryDetailsDto
-import com.apiumhub.github.domain.repository.BaseInteractor
-import com.apiumhub.github.domain.repository.BaseService
+import com.apiumhub.github.domain.common.BaseInteractor
+import com.apiumhub.github.domain.common.BaseService
 import io.reactivex.Scheduler
 import io.reactivex.rxkotlin.Observables
 import io.reactivex.subjects.PublishSubject
@@ -24,7 +24,8 @@ interface RepositoryDetailsService : BaseService {
       repository: GithubRepository,
       observeOn: Scheduler,
       subscribeOn: Scheduler
-    ): RepositoryDetailsService = RepositoryDetailsInteractor(repository, observeOn, subscribeOn)
+    ): RepositoryDetailsService =
+      RepositoryDetailsInteractor(repository, observeOn, subscribeOn)
   }
 }
 
@@ -54,7 +55,14 @@ class RepositoryDetailsInteractor(
     )
 
     execute(observable) {
-      stream.onNext(RepositoryDetailsEvent.DetailsLoaded(RepositoryDetailsDto(it.first.size, it.second.size)))
+      stream.onNext(
+        RepositoryDetailsEvent.DetailsLoaded(
+          RepositoryDetailsDto(
+            it.first.size,
+            it.second.size
+          )
+        )
+      )
     }
   }
 

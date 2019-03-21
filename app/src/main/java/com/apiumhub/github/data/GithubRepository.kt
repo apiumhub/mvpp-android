@@ -1,16 +1,14 @@
 package com.apiumhub.github.data
 
+import com.apiumhub.github.data.common.GithubApi
+import com.apiumhub.github.data.exception.StatsCachingException
 import com.apiumhub.github.domain.entity.BranchDto
 import com.apiumhub.github.domain.entity.CommitsDto
-import com.apiumhub.github.domain.entity.Repository
-import com.apiumhub.github.domain.entity.RepositorySearchDto
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import java.util.concurrent.TimeUnit
 
 interface GithubRepository {
-  fun findAllRepositories(): Observable<List<Repository>>
-  fun searchRepositories(query: String): Observable<RepositorySearchDto>
   fun getCommitsForRepository(user: String, repository: String): Observable<List<CommitsDto>>
   fun getBranchesForRepository(user: String, repository: String): Observable<List<BranchDto>>
   fun getReadmeForRepository(user: String, repository: String): Observable<String>
@@ -23,12 +21,6 @@ interface GithubRepository {
 
 class GithubDataSource(private val api: GithubApi, private val errorsStream: PublishSubject<Throwable>) :
   GithubRepository {
-
-  override fun findAllRepositories() =
-    executeRequest(api.findAllRepositories())
-
-  override fun searchRepositories(query: String) =
-    executeRequest(api.searchRepositories(query))
 
   override fun getCommitsForRepository(user: String, repository: String) =
     executeRequest(api.getCommitsForRepository(user, repository)

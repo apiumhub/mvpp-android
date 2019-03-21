@@ -1,6 +1,6 @@
 package com.apiumhub.github.presentation.details
 
-import com.apiumhub.github.domain.repository.details.RepositoryDetailsService
+import com.apiumhub.github.domain.RepositoryDetailsService
 
 class RepositoryDetailsPresenter(view: RepositoryDetailsView, service: RepositoryDetailsService) {
   init {

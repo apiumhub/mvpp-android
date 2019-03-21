@@ -4,6 +4,7 @@ import android.app.Fragment
 import android.os.Bundle
 import android.view.View
 import com.apiumhub.github.data.GithubRepository
+import com.apiumhub.github.data.RepositoryListRepository
 import com.apiumhub.github.domain.entity.Repository
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -124,7 +125,7 @@ interface DelegateService {
   var onDataFound: OutDelegateEvent<(List<Repository>)>
 }
 
-class DelegateInteractor(private val repository: GithubRepository) : DelegateService {
+class DelegateInteractor(private val repository: RepositoryListRepository) : DelegateService {
   override var onDataFound: OutDelegateEvent<List<Repository>> by OutDelegate()
 
   override fun findAll() {
