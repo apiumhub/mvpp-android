@@ -2,7 +2,7 @@ package com.apiumhub.github.data.common
 
 import java.util.*
 
-abstract class OnMemoryRepository {
+abstract class InMemoryRepository {
   private val expiresIn: Long = 1000 * 60 * 5
   private var timestamp: Long = 0L
   protected var isExpired = true

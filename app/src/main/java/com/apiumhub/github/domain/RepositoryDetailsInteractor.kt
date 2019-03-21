@@ -1,9 +1,9 @@
 package com.apiumhub.github.domain
 
-import com.apiumhub.github.data.GithubRepository
-import com.apiumhub.github.domain.entity.RepositoryDetailsDto
+import com.apiumhub.github.data.RepositoryDetailsRepository
 import com.apiumhub.github.domain.common.BaseInteractor
 import com.apiumhub.github.domain.common.BaseService
+import com.apiumhub.github.domain.entity.RepositoryDetailsDto
 import io.reactivex.Scheduler
 import io.reactivex.rxkotlin.Observables
 import io.reactivex.subjects.PublishSubject
@@ -21,16 +21,18 @@ interface RepositoryDetailsService : BaseService {
 
   companion object {
     fun create(
-      repository: GithubRepository,
+      githubRepository: RepositoryDetailsRepository,
+      inMemoryRepository: RepositoryDetailsRepository,
       observeOn: Scheduler,
       subscribeOn: Scheduler
     ): RepositoryDetailsService =
-      RepositoryDetailsInteractor(repository, observeOn, subscribeOn)
+      RepositoryDetailsInteractor(githubRepository, inMemoryRepository, observeOn, subscribeOn)
   }
 }
 
 class RepositoryDetailsInteractor(
-  private val repository: GithubRepository,
+  private val githubRepository: RepositoryDetailsRepository,
+  private val inMemoryRepository: RepositoryDetailsRepository,
   observeOn: Scheduler,
   subscribeOn: Scheduler
 ) : BaseInteractor(observeOn, subscribeOn), RepositoryDetailsService {
@@ -43,26 +45,30 @@ class RepositoryDetailsInteractor(
   }
 
   private fun getReadmeInternal(user: String, repositoryName: String) {
-    execute(repository.getReadmeForRepository(user, repositoryName)) {
+    execute(inMemoryRepository.getReadmeForRepository(user, repositoryName)
+      .flatMap {
+        if (it.isNotEmpty()) stream.onNext(RepositoryDetailsEvent.ReadmeLoaded(it))
+        githubRepository.getReadmeForRepository(user, repositoryName)
+      }) {
+      inMemoryRepository.addOrUpdateReadme(it)
       stream.onNext(RepositoryDetailsEvent.ReadmeLoaded(it))
     }
   }
 
   private fun getDetailsInternal(user: String, repositoryName: String) {
     val observable = Observables.combineLatest(
-      repository.getCommitsForRepository(user, repositoryName),
-      repository.getBranchesForRepository(user, repositoryName)
+      githubRepository.getCommitsForRepository(user, repositoryName),
+      githubRepository.getBranchesForRepository(user, repositoryName)
     )
 
     execute(observable) {
-      stream.onNext(
-        RepositoryDetailsEvent.DetailsLoaded(
-          RepositoryDetailsDto(
-            it.first.size,
-            it.second.size
-          )
-        )
+      var repositoryDetailsDto = RepositoryDetailsDto(
+        it.first.size,
+        it.second.size
       )
+
+      inMemoryRepository.addOrUpdateRepositoryDetails(repositoryDetailsDto)
+      stream.onNext(RepositoryDetailsEvent.DetailsLoaded(repositoryDetailsDto))
     }
   }
 
@@ -75,7 +81,7 @@ class RepositoryDetailsInteractor(
   }
 
 //  private fun getCommitsInternal(user: String, repositoryName: String) {
-//    disposeBag.add(repository
+//    disposeBag.add(githubRepository
 //      .getCommitsForRepository(user, repositoryName)
 //      .subscribeOn(Schedulers.newThread())
 //      .observeOn(AndroidSchedulers.mainThread())
@@ -84,28 +90,5 @@ class RepositoryDetailsInteractor(
 //        acc + next.total!!
 //      }
 //      .subscribe { count -> commitsCountSubject.onNext(count!!) })
-//  }
-//
-//  private fun getBranchesInternal(user: String, repositoryName: String) {
-//    disposeBag.add(repository
-//      .getBranchesForRepository(user, repositoryName)
-//      .subscribeOn(Schedulers.newThread())
-//      .observeOn(AndroidSchedulers.mainThread())
-//      .subscribe { branchesCountSubject.onNext(it.count()) })
-//  }
-//
-//  private fun getReadmeInternal(user: String, repositoryName: String) {
-//    disposeBag.add(repository.getReadmeForRepository(user, repositoryName)
-//      .subscribeOn(Schedulers.newThread())
-//      .observeOn(AndroidSchedulers.mainThread())
-//      .subscribe { loadedReadmePublishSubject.onNext(it) })
-//  }
-//
-//  private fun combineRepositoryDetailsInternal() {
-//    disposeBag.add(Observables
-//      .combineLatest(commitsCountSubject, branchesCountSubject) { commits, branches ->
-//        RepositoryDetailsDto(commits, branches)
-//      }
-//      .subscribe { repositoryDetailsPublishSubject.onNext(it) })
 //  }
 }

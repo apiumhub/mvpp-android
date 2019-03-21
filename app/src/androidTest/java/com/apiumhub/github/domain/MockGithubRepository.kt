@@ -1,11 +1,11 @@
 package com.apiumhub.github.domain
 
-import com.apiumhub.github.data.GithubRepository
+import com.apiumhub.github.data.RepositoryDetailsRepository
 import com.apiumhub.github.domain.entity.*
 import io.reactivex.Observable
 import java.util.concurrent.TimeUnit
 
-class MockGithubRepository: GithubRepository {
+class MockGithubRepository: RepositoryDetailsRepository {
 
     private val someOwner = RepositoryOwner("someLogin", 1, "http://someAvatarUrl.domain", "http://someUrl.domain")
     private val someRepository = Repository(1, "someRepository", "someName", someOwner, false, "http://someUrl.domain", "someDescription")

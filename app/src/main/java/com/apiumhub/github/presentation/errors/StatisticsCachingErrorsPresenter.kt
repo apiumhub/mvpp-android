@@ -1,6 +1,6 @@
 package com.apiumhub.github.presentation.errors
 
-import com.apiumhub.github.data.exception.StatsCachingException
+import com.apiumhub.github.data.common.exception.StatsCachingException
 
 interface IStatisticsCachingErrorInteractor {
     fun onStatisticsCachingError(func: (exception: StatsCachingException) -> Unit)

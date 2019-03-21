@@ -2,7 +2,7 @@ package com.apiumhub.github.data
 
 import com.apiumhub.github.data.common.GithubApi
 import com.apiumhub.github.data.common.NetworkRepository
-import com.apiumhub.github.data.common.OnMemoryRepository
+import com.apiumhub.github.data.common.InMemoryRepository
 import com.apiumhub.github.domain.entity.Repository
 import com.apiumhub.github.domain.entity.RepositorySearchDto
 import io.reactivex.Observable
@@ -24,7 +24,7 @@ interface RepositoryListRepository {
   }
 }
 
-class InMemoryRepositoryListRepository : OnMemoryRepository(), RepositoryListRepository {
+class InMemoryRepositoryListRepository : InMemoryRepository(), RepositoryListRepository {
   private var repositoryList: List<Repository> = emptyList()
   private var repositorySearchDto: RepositorySearchDto = RepositorySearchDto(null, null, emptyList())
 
