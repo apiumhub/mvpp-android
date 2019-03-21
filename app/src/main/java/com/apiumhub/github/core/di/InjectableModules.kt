@@ -1,11 +1,8 @@
 package com.apiumhub.github.core.di
 
-import com.apiumhub.github.data.*
-import com.apiumhub.github.data.common.GithubApi
-import com.apiumhub.github.domain.RepositoryDetailsService
-import com.apiumhub.github.domain.RepositoryListService
-import com.apiumhub.github.presentation.details.RepositoryDetailsPresenter
-import com.apiumhub.github.presentation.list.RepositoryListPresenter
+import com.apiumhub.github.core.data.GithubApi
+import com.apiumhub.github.details.*
+import com.apiumhub.github.list.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject

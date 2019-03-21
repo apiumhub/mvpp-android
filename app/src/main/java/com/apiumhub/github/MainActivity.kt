@@ -3,10 +3,10 @@ package com.apiumhub.github
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
-import com.apiumhub.github.presentation.errors.GenericErrorsPresenter
-import com.apiumhub.github.presentation.errors.IErrorsInteractor
-import com.apiumhub.github.presentation.errors.IErrorsView
-import com.apiumhub.github.presentation.list.RepositoryListView
+import com.apiumhub.github.core.presentation.errors.GenericErrorsPresenter
+import com.apiumhub.github.core.presentation.errors.IErrorsInteractor
+import com.apiumhub.github.core.presentation.errors.IErrorsView
+import com.apiumhub.github.list.RepositoryListView
 import io.reactivex.Observable
 
 class MainActivity : AppCompatActivity(), IErrorsView {

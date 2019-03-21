@@ -1,7 +1,7 @@
 package com.apiumhub.github
 
-import com.apiumhub.github.domain.entity.CommitsDto
-import com.apiumhub.github.domain.entity.Repository
+import com.apiumhub.github.core.domain.entity.CommitsDto
+import com.apiumhub.github.core.domain.entity.Repository
 import com.google.gson.Gson
 import java.io.File
 
