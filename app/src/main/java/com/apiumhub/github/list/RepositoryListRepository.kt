@@ -2,15 +2,27 @@ package com.apiumhub.github.list
 
 import com.apiumhub.github.core.data.GithubApi
 import com.apiumhub.github.core.data.NetworkRepository
-import com.apiumhub.github.core.data.InMemoryRepository
 import com.apiumhub.github.core.domain.entity.Repository
 import com.apiumhub.github.core.domain.entity.RepositorySearchDto
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
+import java.util.*
+import kotlin.collections.HashMap
+
+abstract class InMemory(var expire: Long = Calendar.getInstance().timeInMillis) {
+  fun isExpired() = Calendar.getInstance().timeInMillis > (expire + EXPIRES_IN)
+
+  companion object {
+    private const val EXPIRES_IN: Long = 1000 * 30
+  }
+}
+
+data class RepositoryListInMemory(val list: List<Repository>) : InMemory()
+data class RepositorySearchInMemory(val searchDto: RepositorySearchDto) : InMemory()
 
 interface RepositoryListRepository {
   fun addOrUpdateRepositories(list: List<Repository>)
-  fun addOrUpdateRepositorySearch(searchDto: RepositorySearchDto)
+  fun addOrUpdateRepositorySearch(query: String, searchDto: RepositorySearchDto)
 
   fun findAllRepositories(): Observable<List<Repository>>
   fun searchRepositories(query: String): Observable<RepositorySearchDto>
@@ -24,30 +36,25 @@ interface RepositoryListRepository {
   }
 }
 
-class InMemoryRepositoryListRepository : InMemoryRepository(),
-  RepositoryListRepository {
-  private var repositoryList: List<Repository> = emptyList()
-  private var repositorySearchDto: RepositorySearchDto =
-    RepositorySearchDto(null, null, emptyList())
 
-  override fun addOrUpdateRepositories(list: List<Repository>) =
-    refresh().also { this.repositoryList = list }
+class InMemoryRepositoryListRepository : RepositoryListRepository {
+  private var inMemoryList = RepositoryListInMemory(emptyList())
+  private var inMemoryMapByQuery: HashMap<String, RepositorySearchInMemory> = HashMap()
 
+  override fun addOrUpdateRepositories(list: List<Repository>) {
+    this.inMemoryList = RepositoryListInMemory(list)
+  }
 
-  override fun addOrUpdateRepositorySearch(searchDto: RepositorySearchDto) =
-    refresh().also { this.repositorySearchDto = searchDto }
+  override fun addOrUpdateRepositorySearch(query: String, searchDto: RepositorySearchDto) {
+    this.inMemoryMapByQuery[query] = RepositorySearchInMemory(searchDto)
+  }
 
   override fun findAllRepositories(): Observable<List<Repository>> =
-    Observable.just(if (!isExpired) repositoryList else emptyList())
-
+    Observable.just(if (!inMemoryList.isExpired()) inMemoryList.list else emptyList())
 
   override fun searchRepositories(query: String): Observable<RepositorySearchDto> =
-    Observable.just(if (!isExpired) repositorySearchDto else RepositorySearchDto(
-      null,
-      null,
-      emptyList()
-    )
-    )
+    Observable.just(inMemoryMapByQuery[query]?.let { it.searchDto }
+      ?: RepositorySearchDto(null, null, emptyList()))
 
 }
 
@@ -55,7 +62,7 @@ class GithubRepositoryListRepository(private val api: GithubApi, errorsStream: P
   NetworkRepository(errorsStream), RepositoryListRepository {
   override fun addOrUpdateRepositories(list: List<Repository>) {}
 
-  override fun addOrUpdateRepositorySearch(searchDto: RepositorySearchDto) {}
+  override fun addOrUpdateRepositorySearch(query: String, searchDto: RepositorySearchDto) {}
 
   override fun findAllRepositories(): Observable<List<Repository>> =
     executeRequest(api.findAllRepositories())

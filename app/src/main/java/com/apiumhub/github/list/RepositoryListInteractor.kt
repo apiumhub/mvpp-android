@@ -61,7 +61,7 @@ class RepositoryListInteractor(
         networkRepository.searchRepositories(query)
       }
     ) {
-      inMemoryRepository.addOrUpdateRepositorySearch(it)
+      inMemoryRepository.addOrUpdateRepositorySearch(query, it)
       when {
         it.items == null -> subject.onNext(Event.ERROR_NULL)
         it.items.isEmpty() -> subject.onNext(Event.EMPTY)
