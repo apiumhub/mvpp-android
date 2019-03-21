@@ -6,8 +6,7 @@ import java.util.concurrent.TimeUnit
 
 abstract class NetworkRepository(private val errorsStream: PublishSubject<Throwable>) {
   protected fun <T> executeRequest(request: Observable<T>, returnOnError: T? = null): Observable<T> {
-    return request.onErrorReturn {
-      errorsStream.onNext(it)
+    return request.onErrorReturn { errorsStream.onNext(it)
       returnOnError
     }
   }

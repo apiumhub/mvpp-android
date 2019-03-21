@@ -5,22 +5,22 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.widget.Toast
 import com.apiumhub.github.R
-import com.apiumhub.github.databinding.ContentMainBinding
 import com.apiumhub.github.core.domain.entity.Repository
 import com.apiumhub.github.core.presentation.Navigator
 import com.apiumhub.github.core.presentation.base.BaseFragment
+import com.apiumhub.github.core.presentation.base.Event
 import com.apiumhub.github.core.presentation.base.EventView
+import com.apiumhub.github.databinding.ContentMainBinding
 import com.jakewharton.rxbinding2.widget.RxTextView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.content_main.*
 import org.koin.android.ext.android.get
 import org.koin.core.parameter.ParameterList
 import java.util.concurrent.TimeUnit
 
 interface RepositoryListView : EventView {
-  fun onSearch(func: (String) -> Unit)
+  var onSearch: (String) -> Unit
   fun showData(items: List<Repository>)
 
   companion object {
@@ -29,9 +29,12 @@ interface RepositoryListView : EventView {
 }
 
 class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryListView {
-  private val subject: PublishSubject<String> = PublishSubject.create()
-
   override fun getLayoutId(): Int = R.layout.content_main
+  override var onSearch: (String) -> Unit
+    get() = {}
+    set(value) {
+      this.onSend(value)
+    }
 
   private val adapter = RepoListAdapter(disposeBag) {
     Navigator.openRepositoryDetails(fragmentManager!!, it)
@@ -40,7 +43,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     get<RepositoryListPresenter> { ParameterList(this as RepositoryListView) }
-    subject.onNext("")
+    subject.onNext(Event.Send(""))
 
     setupSearch()
     binding.contentMainList.adapter = adapter
@@ -71,12 +74,6 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
   }
   //endregion
 
-  //region -- Event Binding --
-  override fun onSearch(func: (String) -> Unit) {
-    disposeBag.add(subject.subscribe { func(it) })
-  }
-  //endregion
-
   //region -- Private methods --
   private fun setupSearch() {
     disposeBag.add(RxTextView
@@ -86,11 +83,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
       .observeOn(AndroidSchedulers.mainThread())
       .map { it.trim().toString() }
       .subscribe {
-        if (it.isEmpty()) {
-          subject.onNext("")
-        } else {
-          subject.onNext(it)
-        }
+        subject.onNext(Event.Send(it))
       })
   }
   //endregion

@@ -19,12 +19,18 @@ interface EventView {
   fun hideLoading()
 }
 
+sealed class Event {
+  class Send<T>(val value: T) : Event()
+  class Sender<A, B>(val p1: A, val p2: B) : Event()
+  object Destroy : Event()
+}
+
 abstract class BaseFragment<Binding : ViewDataBinding> : Fragment(), EventView {
 
   protected lateinit var binding: Binding
 
   protected val disposeBag = CompositeDisposable()
-  private val destroySubject = PublishSubject.create<Unit>()
+  protected val subject: PublishSubject<Event> = PublishSubject.create()
 
   abstract fun getLayoutId(): Int
 
@@ -39,7 +45,7 @@ abstract class BaseFragment<Binding : ViewDataBinding> : Fragment(), EventView {
   }
 
   override fun onDestroyView() {
-    destroySubject.onNext(Unit)
+    subject.onNext(Event.Destroy)
     disposeBag.clear()
     super.onDestroyView()
   }
@@ -49,7 +55,15 @@ abstract class BaseFragment<Binding : ViewDataBinding> : Fragment(), EventView {
   override fun showLoading() {}
   override fun hideLoading() {}
 
+  protected fun <T>onSend(func: (T) -> Unit) {
+    disposeBag.add(subject.filter { it is Event.Send<*> }.subscribe { func((it as Event.Send<T>).value) })
+  }
+
+  protected fun <A, B>onSend(func: (A, B) -> Unit) {
+    disposeBag.add(subject.filter { it is Event.Sender<*,*> }.subscribe { func((it as Event.Sender<A,B>).p1, it.p2) })
+  }
+
   override fun onDestroy(func: () -> Unit) {
-    disposeBag.add(destroySubject.subscribe { func() })
+    disposeBag.add(subject.filter { it is Event.Destroy }.subscribe { func() })
   }
 }
