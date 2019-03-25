@@ -20,7 +20,7 @@ import org.koin.core.parameter.ParameterList
 import java.util.concurrent.TimeUnit
 
 interface RepositoryListView : EventView {
-  var onSearch: (String) -> Unit
+  fun onSearch(func: (String) -> Unit)
   fun showData(items: List<Repository>)
 
   companion object {
@@ -30,15 +30,6 @@ interface RepositoryListView : EventView {
 
 class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryListView {
   override fun getLayoutId(): Int = R.layout.content_main
-  override var onSearch: (String) -> Unit
-    get() = {}
-    set(value) {
-      this.onSend(value)
-    }
-
-  private val adapter = RepoListAdapter(disposeBag) {
-    Navigator.openRepositoryDetails(fragmentManager!!, it)
-  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -46,14 +37,24 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
     subject.onNext(Event.Send(""))
 
     setupSearch()
-    binding.contentMainList.adapter = adapter
+    binding.contentMainList.adapter = RepoListAdapter(disposeBag) {
+      Navigator.openRepositoryDetails(fragmentManager!!, it)
+    }
     binding.contentMainList.layoutManager = LinearLayoutManager(context)
   }
 
-  //region -- View methods --
+  //region -- Actions --
+  override fun onSearch(func: (String) -> Unit) {
+    disposeBag.add(subject.filter { it is Event.Send<*> }.subscribe { func((it as Event.Send<String>).value) })
+  }
+  //endregion
+
+  //region -- View Events --
   override fun showData(items: List<Repository>) {
-    adapter.setItems(items)
-    adapter.notifyDataSetChanged()
+    (binding.contentMainList.adapter as RepoListAdapter).apply {
+      setItems(items)
+      notifyDataSetChanged()
+    }
   }
 
   override fun showLoading() {
@@ -65,8 +66,10 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
   }
 
   override fun showEmpty() {
-    adapter.setItems(emptyList())
-    adapter.notifyDataSetChanged()
+    (binding.contentMainList.adapter as RepoListAdapter).apply {
+      setItems(emptyList())
+      notifyDataSetChanged()
+    }
   }
 
   override fun showError() {
