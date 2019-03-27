@@ -1,17 +1,17 @@
 package com.apiumhub.github.list
 
+
 class RepositoryListPresenter(view: RepositoryListView, service: RepositoryListService) {
   init {
-    view.onSearch(service::search)
-    view.onDestroy(service::cancel)
+    view.bindSearch(service::search)
+    view.bindDestroy(service::cancel)
 
-    service.onStart(view::showLoading)
-    service.onStop(view::hideLoading)
+    service.bindStart(view::showLoading)
+    service.bindStop(view::hideLoading)
 
-    service.onDataFound(view::showData)
-    service.onEmpty(view::showEmpty)
-    service.onErrorNoInternet(view::showError)
-    service.onErrorNullList(view::showError)
-    service.onErrorOther(view::showError)
+    service.bindData(view::showData)
+    service.bindEmptyData(view::showEmptyData)
+    service.bindNetworkError(view::showNetworkError)
+    service.bindGenericError(view::showGenericError)
   }
 }

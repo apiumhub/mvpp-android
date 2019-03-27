@@ -9,7 +9,7 @@ import io.reactivex.subjects.PublishSubject
 
 interface RepositoryListService : BaseService {
   fun search(query: String)
-  fun onDataFound(func: (List<Repository>) -> Unit)
+  fun bindData(func: (List<Repository>) -> Unit)
 
   companion object {
     fun create(
@@ -70,7 +70,7 @@ class RepositoryListInteractor(
     }
   }
 
-  override fun onDataFound(func: (List<Repository>) -> Unit) {
+  override fun bindData(func: (List<Repository>) -> Unit) {
     disposeBag.add(successStream.subscribe { func(it) })
   }
 }

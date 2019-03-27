@@ -8,7 +8,6 @@ import io.reactivex.subjects.PublishSubject
 import java.net.ConnectException
 import java.net.UnknownHostException
 
-
 enum class Event {
   EMPTY, ERROR_NULL, ERROR_NO_INTERNET, ERROR_OTHER, START, STOP, UNKNOWN
 }
@@ -16,12 +15,12 @@ enum class Event {
 interface BaseService {
   fun cancel()
 
-  fun onStart(func: () -> Unit)
-  fun onStop(func: () -> Unit)
-  fun onEmpty(func: () -> Unit)
-  fun onErrorNullList(func: () -> Unit)
-  fun onErrorNoInternet(func: () -> Unit)
-  fun onErrorOther(func: () -> Unit)
+  fun bindStart(func: () -> Unit)
+  fun bindStop(func: () -> Unit)
+  fun bindEmptyData(func: () -> Unit)
+  fun bindNullError(func: () -> Unit)
+  fun bindNetworkError(func: () -> Unit)
+  fun bindGenericError(func: () -> Unit)
 }
 
 abstract class BaseInteractor(private val observeOn: Scheduler, private val subscribeOn: Scheduler) :
@@ -63,27 +62,27 @@ abstract class BaseInteractor(private val observeOn: Scheduler, private val subs
     disposeBag.clear()
   }
 
-  override fun onStart(func: () -> Unit) {
+  override fun bindStart(func: () -> Unit) {
     subscribeEvent(Event.START, func)
   }
 
-  override fun onStop(func: () -> Unit) {
+  override fun bindStop(func: () -> Unit) {
     subscribeEvent(Event.STOP, func)
   }
 
-  override fun onEmpty(func: () -> Unit) {
+  override fun bindEmptyData(func: () -> Unit) {
     subscribeEvent(Event.EMPTY, func)
   }
 
-  override fun onErrorNullList(func: () -> Unit) {
+  override fun bindNullError(func: () -> Unit) {
     subscribeEvent(Event.ERROR_NULL, func)
   }
 
-  override fun onErrorNoInternet(func: () -> Unit) {
+  override fun bindNetworkError(func: () -> Unit) {
     subscribeEvent(Event.ERROR_NO_INTERNET, func)
   }
 
-  override fun onErrorOther(func: () -> Unit) {
+  override fun bindGenericError(func: () -> Unit) {
     subscribeEvent(Event.ERROR_OTHER, func)
   }
 

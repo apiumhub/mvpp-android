@@ -13,7 +13,7 @@ import org.koin.android.ext.android.get
 import org.koin.core.parameter.ParameterList
 
 interface RepositoryDetailsView : EventView {
-  var onLoadRepositoryDetails: (String, String) -> Unit
+  fun bindLoadDetails(func: (String, String) -> Unit)
 
   fun repositoryInformationLoaded(details: RepositoryDetailsDto)
   fun readmeLoaded(readme: String)
@@ -22,11 +22,6 @@ interface RepositoryDetailsView : EventView {
 class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(),
   RepositoryDetailsView {
   override fun getLayoutId(): Int = R.layout.repository_details
-  override var onLoadRepositoryDetails: (String, String) -> Unit
-    get() = { _, _ -> }
-    set(value) {
-      this.onSend(value)
-    }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -35,9 +30,13 @@ class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(),
     arguments?.getParcelable<Repository>(REPOSITORY_KEY)?.let {
       binding.repositoryDetailsAuthor.text = it.name
       binding.repositoryDetailsDescription.text = it.description
-      subject.onNext(Event.Send(Pair(it.owner?.login!!, it.name!!)))
+      subject.onNext(Event.Single(Pair(it.owner?.login!!, it.name!!)))
     }
   }
+
+  //region -- Actions --
+  override fun bindLoadDetails(func: (String, String) -> Unit) = bindPair(func)
+  //endregion
 
   override fun repositoryInformationLoaded(details: RepositoryDetailsDto) {
     binding.repositoryDetailsBranches.text = details.branchesCount.toString()

@@ -20,7 +20,7 @@ import org.koin.core.parameter.ParameterList
 import java.util.concurrent.TimeUnit
 
 interface RepositoryListView : EventView {
-  fun onSearch(func: (String) -> Unit)
+  fun bindSearch(func: (String) -> Unit)
   fun showData(items: List<Repository>)
 
   companion object {
@@ -34,7 +34,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     get<RepositoryListPresenter> { ParameterList(this as RepositoryListView) }
-    subject.onNext(Event.Send(""))
+    subject.onNext(Event.Single(""))
 
     setupSearch()
     binding.contentMainList.adapter = RepoListAdapter(disposeBag) {
@@ -44,9 +44,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
   }
 
   //region -- Actions --
-  override fun onSearch(func: (String) -> Unit) {
-    disposeBag.add(subject.filter { it is Event.Send<*> }.subscribe { func((it as Event.Send<String>).value) })
-  }
+  override fun bindSearch(func: (String) -> Unit) = bindSingle(func)
   //endregion
 
   //region -- View Events --
@@ -65,28 +63,33 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
     progress.visibility = View.GONE
   }
 
-  override fun showEmpty() {
+  override fun showEmptyData() {
     (binding.contentMainList.adapter as RepoListAdapter).apply {
       setItems(emptyList())
       notifyDataSetChanged()
     }
   }
 
-  override fun showError() {
+  override fun showNetworkError() {
+    Toast.makeText(context, "network error", Toast.LENGTH_SHORT).show()
+  }
+
+  override fun showGenericError() {
     Toast.makeText(context, "generic error", Toast.LENGTH_SHORT).show()
   }
   //endregion
 
   //region -- Private methods --
   private fun setupSearch() {
-    disposeBag.add(RxTextView
+    disposeBag.add(
+      RxTextView
       .textChanges(binding.contentMainSearch)
       .debounce(300, TimeUnit.MILLISECONDS)
       .subscribeOn(Schedulers.io())
       .observeOn(AndroidSchedulers.mainThread())
       .map { it.trim().toString() }
       .subscribe {
-        subject.onNext(Event.Send(it))
+        subject.onNext(Event.Single(it))
       })
   }
   //endregion

@@ -1,9 +1,9 @@
 package com.apiumhub.github.core.domain.networkRepository.list
 
-import com.apiumhub.github.list.RepositoryListRepository
-import com.apiumhub.github.list.RepositoryListService
 import com.apiumhub.github.core.domain.entity.Repository
 import com.apiumhub.github.core.domain.entity.RepositorySearchDto
+import com.apiumhub.github.list.RepositoryListRepository
+import com.apiumhub.github.list.RepositoryListService
 import io.mockk.every
 import io.mockk.mockk
 import io.reactivex.Observable
@@ -36,7 +36,7 @@ class RepositoryListServiceTest {
   fun `should send empty event when find all repositories and retrieved list is empty`() {
     getOnMemoryEmptyRepositories()
     every { networkRepository.findAllRepositories() } returns Observable.just(emptyList())
-    sut.onEmpty { countDownLatch.countDown() }
+    sut.bindEmptyData { countDownLatch.countDown() }
     subscription()
   }
 
@@ -46,7 +46,7 @@ class RepositoryListServiceTest {
     val expected = listOf(Repository(0, "", "", null, true, "", ""))
     every { networkRepository.findAllRepositories() } returns Observable.just(expected)
     every { inMemoryRepository.addOrUpdateRepositories(expected) } returns Unit
-    sut.onDataFound {
+    sut.bindData {
       assert(it == expected)
       countDownLatch.countDown()
     }
@@ -57,7 +57,7 @@ class RepositoryListServiceTest {
   fun `should send error null event when find all repositories and throws illegal argument exception`() {
     getOnMemoryEmptyRepositories()
     every { networkRepository.findAllRepositories() } returns Observable.error(IllegalArgumentException())
-    sut.onErrorNullList { countDownLatch.countDown() }
+    sut.bindNullError { countDownLatch.countDown() }
     subscription()
   }
 
@@ -65,7 +65,7 @@ class RepositoryListServiceTest {
   fun `should send error no internet event when find all repositories and throws unknown host exception`() {
     getOnMemoryEmptyRepositories()
     every { networkRepository.findAllRepositories() } returns Observable.error(UnknownHostException())
-    sut.onErrorNoInternet { countDownLatch.countDown() }
+    sut.bindNetworkError { countDownLatch.countDown() }
     subscription()
   }
 
@@ -73,7 +73,7 @@ class RepositoryListServiceTest {
   fun `should send error other event when find all repositories and throws any exception`() {
     getOnMemoryEmptyRepositories()
     every { networkRepository.findAllRepositories() } returns Observable.error(Exception())
-    sut.onErrorOther { countDownLatch.countDown() }
+    sut.bindGenericError { countDownLatch.countDown() }
     subscription()
   }
 
@@ -87,7 +87,7 @@ class RepositoryListServiceTest {
       emptyList()
     )
     every { networkRepository.searchRepositories(query) } returns Observable.just(expected)
-    sut.onEmpty {
+    sut.bindEmptyData {
       countDownLatch.countDown()
     }
     subscription(query)
@@ -99,7 +99,7 @@ class RepositoryListServiceTest {
     getOnMemoryEmptyRepositories(query)
     val expected = RepositorySearchDto(null, null, null)
     every { networkRepository.searchRepositories(query) } returns Observable.just(expected)
-    sut.onErrorNullList { countDownLatch.countDown() }
+    sut.bindNullError { countDownLatch.countDown() }
     subscription(query)
   }
 
@@ -113,7 +113,7 @@ class RepositoryListServiceTest {
       listOf(Repository(0, "", "", null, true, "", ""))
     )
     every { networkRepository.searchRepositories(query) } returns Observable.just(expected)
-    sut.onDataFound {
+    sut.bindData {
       assert(it == expected.items)
       countDownLatch.countDown()
     }
@@ -125,7 +125,7 @@ class RepositoryListServiceTest {
     val query = "query"
     getOnMemoryEmptyRepositories(query)
     every { networkRepository.searchRepositories(query) } returns Observable.error(IllegalArgumentException())
-    sut.onErrorNullList { countDownLatch.countDown() }
+    sut.bindNullError { countDownLatch.countDown() }
     subscription(query)
   }
 
@@ -134,7 +134,7 @@ class RepositoryListServiceTest {
     val query = "query"
     getOnMemoryEmptyRepositories(query)
     every { networkRepository.searchRepositories(query) } returns Observable.error(UnknownHostException())
-    sut.onErrorNoInternet { countDownLatch.countDown() }
+    sut.bindNetworkError { countDownLatch.countDown() }
     subscription(query)
   }
 
@@ -143,16 +143,16 @@ class RepositoryListServiceTest {
     val query = "query"
     getOnMemoryEmptyRepositories(query)
     every { networkRepository.searchRepositories(query) } returns Observable.error(Exception())
-    sut.onErrorOther { countDownLatch.countDown() }
+    sut.bindGenericError { countDownLatch.countDown() }
     subscription(query)
   }
 
   private fun subscription(query: String = "") {
     this.countDownLatch = CountDownLatch(3)
-    sut.onStart {
+    sut.bindStart {
       countDownLatch.countDown()
     }
-    sut.onStop {
+    sut.bindStop {
       countDownLatch.countDown()
     }
     sut.search(query)
@@ -169,6 +169,6 @@ class RepositoryListServiceTest {
       )
     )
     every { inMemoryRepository.addOrUpdateRepositories(any()) } returns Unit
-    every { inMemoryRepository.addOrUpdateRepositorySearch(any()) } returns Unit
+    every { inMemoryRepository.addOrUpdateRepositorySearch(any(), any()) } returns Unit
   }
 }
