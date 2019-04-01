@@ -73,7 +73,7 @@ class RepositoryListServiceTest {
   fun `should send error other event when find all repositories and throws any exception`() {
     getOnMemoryEmptyRepositories()
     every { networkRepository.findAllRepositories() } returns Observable.error(Exception())
-    sut.bindGenericError { countDownLatch.countDown() }
+    sut.bindOtherError { countDownLatch.countDown() }
     subscription()
   }
 
@@ -143,7 +143,7 @@ class RepositoryListServiceTest {
     val query = "query"
     getOnMemoryEmptyRepositories(query)
     every { networkRepository.searchRepositories(query) } returns Observable.error(Exception())
-    sut.bindGenericError { countDownLatch.countDown() }
+    sut.bindOtherError { countDownLatch.countDown() }
     subscription(query)
   }
 

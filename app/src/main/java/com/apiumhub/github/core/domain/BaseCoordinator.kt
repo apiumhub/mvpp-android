@@ -9,7 +9,7 @@ import java.net.ConnectException
 import java.net.UnknownHostException
 
 enum class Event {
-  EMPTY, ERROR_NULL, ERROR_NO_INTERNET, ERROR_OTHER, START, STOP, UNKNOWN
+  EMPTY, ERROR_NO_INTERNET, ERROR_OTHER, START, STOP, UNKNOWN
 }
 
 interface BaseService {
@@ -18,12 +18,11 @@ interface BaseService {
   fun bindStart(func: () -> Unit)
   fun bindStop(func: () -> Unit)
   fun bindEmptyData(func: () -> Unit)
-  fun bindNullError(func: () -> Unit)
   fun bindNetworkError(func: () -> Unit)
-  fun bindGenericError(func: () -> Unit)
+  fun bindOtherError(func: () -> Unit)
 }
 
-abstract class BaseInteractor(private val observeOn: Scheduler, private val subscribeOn: Scheduler) :
+abstract class BaseCoordinator(private val observeOn: Scheduler, private val subscribeOn: Scheduler) :
   BaseService {
   protected val subject: PublishSubject<Event> = PublishSubject.create()
   protected val disposeBag = CompositeDisposable()
@@ -38,7 +37,6 @@ abstract class BaseInteractor(private val observeOn: Scheduler, private val subs
         .subscribeBy(
           onError = {
             when (it) {
-              is IllegalArgumentException -> subject.onNext(Event.ERROR_NULL)
               is UnknownHostException, is ConnectException -> subject.onNext(Event.ERROR_NO_INTERNET)
               else -> subject.onNext(Event.ERROR_OTHER)
             }
@@ -74,15 +72,11 @@ abstract class BaseInteractor(private val observeOn: Scheduler, private val subs
     subscribeEvent(Event.EMPTY, func)
   }
 
-  override fun bindNullError(func: () -> Unit) {
-    subscribeEvent(Event.ERROR_NULL, func)
-  }
-
   override fun bindNetworkError(func: () -> Unit) {
     subscribeEvent(Event.ERROR_NO_INTERNET, func)
   }
 
-  override fun bindGenericError(func: () -> Unit) {
+  override fun bindOtherError(func: () -> Unit) {
     subscribeEvent(Event.ERROR_OTHER, func)
   }
 

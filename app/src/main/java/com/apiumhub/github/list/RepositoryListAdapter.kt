@@ -10,10 +10,10 @@ import com.squareup.picasso.Picasso
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 
-class RepoListAdapter(
+class RepositoryListAdapter(
   private val disposeBag: CompositeDisposable,
   private val repositoryClicked: (repository: Repository) -> Unit
-) : RecyclerView.Adapter<RepoItemViewHolder>() {
+) : RecyclerView.Adapter<RepositoryListAdapter.RepoItemViewHolder>() {
 
   private var repos: List<Repository> = emptyList()
   private val unsubscribe: PublishSubject<Any> = PublishSubject.create()
@@ -39,6 +39,7 @@ class RepoListAdapter(
     super.onDetachedFromRecyclerView(recyclerView)
     unsubscribe.onNext(Any())
   }
+
+  inner class RepoItemViewHolder(val binding: RepositoryRowBinding) : RecyclerView.ViewHolder(binding.root)
 }
 
-class RepoItemViewHolder(val binding: RepositoryRowBinding) : RecyclerView.ViewHolder(binding.root)

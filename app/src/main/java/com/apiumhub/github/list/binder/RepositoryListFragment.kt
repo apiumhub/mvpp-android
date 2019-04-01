@@ -1,4 +1,4 @@
-package com.apiumhub.github.list
+package com.apiumhub.github.list.binder
 
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
@@ -8,8 +8,8 @@ import com.apiumhub.github.R
 import com.apiumhub.github.core.domain.entity.Repository
 import com.apiumhub.github.core.presentation.Navigator
 import com.apiumhub.github.core.presentation.base.BaseFragment
-import com.apiumhub.github.core.presentation.base.Event
 import com.apiumhub.github.databinding.ContentMainBinding
+import com.apiumhub.github.list.RepositoryListAdapter
 import com.jakewharton.rxbinding2.widget.RxTextView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -21,10 +21,12 @@ import java.util.concurrent.TimeUnit
 class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryListView {
   override fun getLayoutId(): Int = R.layout.content_main
 
+  lateinit var presenter: RepositoryListPresenter
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    get<RepositoryListPresenter> { ParameterList(this as RepositoryListView) }
-    subject.onNext(Event.Single(""))
+    presenter = get { ParameterList(this as RepositoryListView) }
+    presenter.onSearch()
 
     setupSearch()
     binding.contentMainList.adapter = RepositoryListAdapter(disposeBag) {
@@ -33,9 +35,10 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
     binding.contentMainList.layoutManager = LinearLayoutManager(context)
   }
 
-  //region -- Actions --
-  override fun bindSearch(func: (String) -> Unit) = bindSingle(func)
-  //endregion
+  override fun onDestroyView() {
+    presenter.onDestroy()
+    super.onDestroyView()
+  }
 
   //region -- View Events --
   override fun showData(items: List<Repository>) {
@@ -79,12 +82,8 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
         .observeOn(AndroidSchedulers.mainThread())
         .map { it.trim().toString() }
         .subscribe {
-          subject.onNext(Event.Single(it))
+          presenter.onSearch(it)
         })
   }
   //endregion
-
-  companion object {
-    fun newInstance(): RepositoryListFragment = RepositoryListFragment()
-  }
 }

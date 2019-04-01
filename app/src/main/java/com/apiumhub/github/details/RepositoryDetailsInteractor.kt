@@ -1,6 +1,6 @@
 package com.apiumhub.github.details
 
-import com.apiumhub.github.core.domain.BaseInteractor
+import com.apiumhub.github.core.domain.BaseCoordinator
 import com.apiumhub.github.core.domain.BaseService
 import com.apiumhub.github.core.domain.entity.RepositoryDetailsDto
 import io.reactivex.Scheduler
@@ -39,7 +39,7 @@ class RepositoryDetailsInteractor(
   private val inMemoryRepository: RepositoryDetailsRepository,
   observeOn: Scheduler,
   subscribeOn: Scheduler
-) : BaseInteractor(observeOn, subscribeOn), RepositoryDetailsService {
+) : BaseCoordinator(observeOn, subscribeOn), RepositoryDetailsService {
 
   private val stream: PublishSubject<RepositoryDetailsEvent> = PublishSubject.create()
 
