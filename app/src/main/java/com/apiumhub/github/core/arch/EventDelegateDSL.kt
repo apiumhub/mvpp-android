@@ -140,8 +140,8 @@ interface DelegateView {
 
 class DelegatePresenter(private val view: DelegateView, private val service: DelegateService) {
   init {
-    service.listen(view.actions)
-    view.translate(service.events)
+//    service.listen(view.actions)
+//    view.translate(service.events)
   }
 }
 
@@ -150,10 +150,10 @@ class DelegateInteractor(private val repository: RepositoryListRepository) : Del
   override var events: EventOutput<Event> by Output()
 
   override fun listen(actions: TransitionAction<Action>) {
-    when(actions.value) {
-      is Action.Search -> search(actions.query)
-      is Action.Destroy -> events.clear()
-    }
+//    when(actions.value) {
+//      is Action.Search -> search(actions.query)
+//      is Action.Destroy -> events.clear()
+//    }
 
   }
 

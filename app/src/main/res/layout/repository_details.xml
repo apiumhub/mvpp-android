@@ -1,55 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:tools="http://schemas.android.com/tools">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+  <TextView
+    android:id="@+id/tvAuthor"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:ellipsize="end"
+    android:lines="1"
+    android:textStyle="bold"
+    tools:text="Author" />
 
-        <TextView
-            android:id="@+id/repository_details_author"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:lines="1"
-            android:textStyle="bold"
-            tools:text="Author" />
+  <TextView
+    android:id="@+id/tvDescription"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:textStyle="italic"
+    tools:text="Description" />
 
-        <TextView
-            android:id="@+id/repository_details_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textStyle="italic"
-            tools:text="Description" />
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Commits last year"
+    android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:text="Commits last year"/>
-        
-        <TextView
-            android:id="@+id/repository_details_commits"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            tools:text="459"/>
-        
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:text="Branches"/>
+  <TextView
+    android:id="@+id/tvCommits"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:text="459" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/repository_details_branches"
-            tools:text="5"/>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Branches"
+    android:textStyle="bold" />
 
-        <WebView
-            android:id="@+id/repository_details_readme_webview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+  <TextView
+    android:id="@+id/tvBranches"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:text="5" />
 
-    </LinearLayout>
-</layout>
+  <WebView
+    android:id="@+id/wvReadme"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+
+</LinearLayout>

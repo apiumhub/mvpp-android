@@ -26,9 +26,7 @@ sealed class Event {
   object Destroy : Event()
 }
 
-abstract class BaseFragment<Binding : ViewDataBinding> : Fragment(), EventView {
-
-  protected lateinit var binding: Binding
+abstract class BaseFragment : Fragment(), EventView {
 
   protected val disposeBag = CompositeDisposable()
   protected val subject: PublishSubject<Event> = PublishSubject.create()
@@ -36,13 +34,7 @@ abstract class BaseFragment<Binding : ViewDataBinding> : Fragment(), EventView {
   abstract fun getLayoutId(): Int
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-    binding = DataBindingUtil.inflate(inflater, getLayoutId(), container, false)
-    return binding.root
-  }
-
-  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    super.onViewCreated(view, savedInstanceState)
-    binding.lifecycleOwner = this
+    return inflater.inflate(getLayoutId(), container, false)
   }
 
   override fun onDestroyView() {

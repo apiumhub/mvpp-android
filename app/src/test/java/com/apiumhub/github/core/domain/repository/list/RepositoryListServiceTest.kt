@@ -54,14 +54,6 @@ class RepositoryListServiceTest {
   }
 
   @Test(timeout = 3000)
-  fun `should send error null event when find all repositories and throws illegal argument exception`() {
-    getOnMemoryEmptyRepositories()
-    every { networkRepository.findAllRepositories() } returns Observable.error(IllegalArgumentException())
-    sut.bindNullError { countDownLatch.countDown() }
-    subscription()
-  }
-
-  @Test(timeout = 3000)
   fun `should send error no internet event when find all repositories and throws unknown host exception`() {
     getOnMemoryEmptyRepositories()
     every { networkRepository.findAllRepositories() } returns Observable.error(UnknownHostException())
@@ -94,16 +86,6 @@ class RepositoryListServiceTest {
   }
 
   @Test(timeout = 3000)
-  fun `should send error null event when search by query and retrieved list is null`() {
-    val query = "query"
-    getOnMemoryEmptyRepositories(query)
-    val expected = RepositorySearchDto(null, null, null)
-    every { networkRepository.searchRepositories(query) } returns Observable.just(expected)
-    sut.bindNullError { countDownLatch.countDown() }
-    subscription(query)
-  }
-
-  @Test(timeout = 3000)
   fun `should send found event when search by query and retrieved list have items`() {
     val query = "query"
     getOnMemoryEmptyRepositories(query)
@@ -117,15 +99,6 @@ class RepositoryListServiceTest {
       assert(it == expected.items)
       countDownLatch.countDown()
     }
-    subscription(query)
-  }
-
-  @Test(timeout = 3000)
-  fun `should send error null event when search by query throws illegal argument exception`() {
-    val query = "query"
-    getOnMemoryEmptyRepositories(query)
-    every { networkRepository.searchRepositories(query) } returns Observable.error(IllegalArgumentException())
-    sut.bindNullError { countDownLatch.countDown() }
     subscription(query)
   }
 

@@ -1,63 +1,23 @@
-package com.apiumhub.github.list.binder
+package com.apiumhub.github.list.old.binder
 
 import com.apiumhub.github.core.domain.entity.Repository
-import com.apiumhub.github.list.RepositoryListFragment
-import com.apiumhub.github.list.RepositoryListRepository
-import io.reactivex.Scheduler
+import com.apiumhub.github.list.old.Action
+import com.apiumhub.github.list.old.RepositoryListServiceOld
+import com.apiumhub.github.list.old.RepositoryListViewOld
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import java.net.ConnectException
 import java.net.UnknownHostException
 
-
-interface RepositoryListView {
-  fun showLoading()
-  fun hideLoading()
-
-  fun showData(items: List<Repository>)
-  fun showEmptyData()
-  fun showNetworkError()
-  fun showOtherError()
-
-  companion object {
-    fun create() = RepositoryListFragment.newInstance()
-  }
-}
-
-interface RepositoryListService {
-  fun search(query: String, onNext: (List<Repository>?) -> Unit, onError: (Throwable) -> Unit, onComplete: () -> Unit)
-  fun cancel()
-
-  companion object {
-    fun create(
-      networkRepository: RepositoryListRepository,
-      inMemoryRepository: RepositoryListRepository,
-      observeOn: Scheduler,
-      subscribeOn: Scheduler
-    ): RepositoryListService =
-      RepositoryListInteractor(
-        networkRepository,
-        inMemoryRepository,
-        observeOn,
-        subscribeOn
-      )
-  }
-}
-
-sealed class Action {
-  class Search(val query: String) : Action()
-  object Destroy : Action()
-}
-
-class RepositoryListPresenterBinder(view: RepositoryListView, service: RepositoryListService): RepositoryListPresenter(view) {
+class RepositoryListPresenterBinder(view: RepositoryListViewOld, service: RepositoryListServiceOld): RepositoryListPresenter(view) {
   init {
     bindSearch { query ->
       service.search(query,
-        onNext = { list ->
-          onGetRepositoryListNext(list)
-        },
         onError = { error ->
           onGetRepositoryListError(error)
+        },
+        onNext = { list ->
+          onGetRepositoryListNext(list)
         },
         onComplete = {
           onGetRepositoryListComplete()
@@ -71,7 +31,7 @@ class RepositoryListPresenterBinder(view: RepositoryListView, service: Repositor
   }
 }
 
-open class RepositoryListPresenter(private val view: RepositoryListView) {
+open class RepositoryListPresenter(private val view: RepositoryListViewOld) {
   private val subject: PublishSubject<Action> = PublishSubject.create()
   private val disposeBag = CompositeDisposable()
 

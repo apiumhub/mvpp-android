@@ -8,7 +8,7 @@ import com.apiumhub.github.core.domain.entity.RepositoryDetailsDto
 import com.apiumhub.github.core.presentation.base.BaseFragment
 import com.apiumhub.github.core.presentation.base.Event
 import com.apiumhub.github.core.presentation.base.EventView
-import com.apiumhub.github.databinding.RepositoryDetailsBinding
+import kotlinx.android.synthetic.main.repository_details.*
 import org.koin.android.ext.android.get
 import org.koin.core.parameter.ParameterList
 
@@ -19,7 +19,7 @@ interface RepositoryDetailsView : EventView {
   fun readmeLoaded(readme: String)
 }
 
-class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(),
+class RepositoryDetailsFragment : BaseFragment(),
   RepositoryDetailsView {
   override fun getLayoutId(): Int = R.layout.repository_details
 
@@ -28,8 +28,8 @@ class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(),
     get<RepositoryDetailsPresenter> { ParameterList(this as RepositoryDetailsView) }
 
     arguments?.getParcelable<Repository>(REPOSITORY_KEY)?.let {
-      binding.repositoryDetailsAuthor.text = it.name
-      binding.repositoryDetailsDescription.text = it.description
+      tvAuthor.text = it.name
+      tvDescription.text = it.description
       subject.onNext(Event.Single(Pair(it.owner?.login!!, it.name!!)))
     }
   }
@@ -39,12 +39,12 @@ class RepositoryDetailsFragment : BaseFragment<RepositoryDetailsBinding>(),
   //endregion
 
   override fun repositoryInformationLoaded(details: RepositoryDetailsDto) {
-    binding.repositoryDetailsBranches.text = details.branchesCount.toString()
-    binding.repositoryDetailsCommits.text = details.commitCount.toString()
+    tvBranches.text = details.branchesCount.toString()
+    tvCommits.text = details.commitCount.toString()
   }
 
   override fun readmeLoaded(readme: String) {
-    binding.repositoryDetailsReadmeWebview.loadData(readme, "text/html", "UTF-8")
+    wvReadme.loadData(readme, "text/html", "UTF-8")
   }
 
   companion object {

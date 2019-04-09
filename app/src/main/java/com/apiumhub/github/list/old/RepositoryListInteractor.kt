@@ -1,4 +1,4 @@
-package com.apiumhub.github.list.classic
+package com.apiumhub.github.list.old
 
 import com.apiumhub.github.core.domain.entity.Repository
 import com.apiumhub.github.list.RepositoryListRepository
@@ -11,12 +11,12 @@ class RepositoryListInteractor(
   private val inMemoryRepository: RepositoryListRepository,
   private val observeOn: Scheduler,
   private val subscribeOn: Scheduler
-) : RepositoryListService {
+) : RepositoryListServiceOld {
 
   private val disposeBag = CompositeDisposable()
 
   override fun search(
-    query: String, onNext: (List<Repository>?) -> Unit, onError: (Throwable) -> Unit, onComplete: () -> Unit
+    query: String, onError: (Throwable) -> Unit, onNext: (List<Repository>?) -> Unit, onComplete: () -> Unit
   ) {
     disposeBag.add(
       if (query.isEmpty()) {
@@ -33,6 +33,7 @@ class RepositoryListInteractor(
 
   private fun findAll(onNext: (List<Repository>?) -> Unit, onError: (Throwable) -> Unit, onComplete: () -> Unit) =
     inMemoryRepository.findAllRepositories()
+      .onErrorReturn { emptyList() }
       .flatMap {
         if (it.isNotEmpty()) onNext(it)
         networkRepository.findAllRepositories()

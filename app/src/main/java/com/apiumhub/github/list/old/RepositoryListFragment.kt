@@ -1,4 +1,4 @@
-package com.apiumhub.github.list.classic
+package com.apiumhub.github.list.old
 
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
@@ -8,8 +8,8 @@ import com.apiumhub.github.R
 import com.apiumhub.github.core.domain.entity.Repository
 import com.apiumhub.github.core.presentation.Navigator
 import com.apiumhub.github.core.presentation.base.BaseFragment
-import com.apiumhub.github.databinding.ContentMainBinding
 import com.apiumhub.github.list.RepositoryListAdapter
+import com.apiumhub.github.list.old.binder.RepositoryListPresenter
 import com.jakewharton.rxbinding2.widget.RxTextView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -18,21 +18,23 @@ import org.koin.android.ext.android.get
 import org.koin.core.parameter.ParameterList
 import java.util.concurrent.TimeUnit
 
-class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryListView {
+class RepositoryListFragment : BaseFragment(), RepositoryListViewOld {
   override fun getLayoutId(): Int = R.layout.content_main
 
   lateinit var presenter: RepositoryListPresenter
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    presenter = get { ParameterList(this as RepositoryListView) }
+    presenter = get { ParameterList(this as RepositoryListViewOld) }
     presenter.onSearch()
 
     setupSearch()
-    binding.contentMainList.adapter = RepositoryListAdapter(disposeBag) {
-      Navigator.openRepositoryDetails(fragmentManager!!, it)
+    rvList.apply {
+      adapter = RepositoryListAdapter(disposeBag) {
+        Navigator.openRepositoryDetails(fragmentManager!!, it)
+      }
+      layoutManager = LinearLayoutManager(context)
     }
-    binding.contentMainList.layoutManager = LinearLayoutManager(context)
   }
 
   override fun onDestroyView() {
@@ -42,7 +44,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
 
   //region -- View Events --
   override fun showData(items: List<Repository>) {
-    (binding.contentMainList.adapter as RepositoryListAdapter).apply {
+    (rvList.adapter as RepositoryListAdapter).apply {
       setItems(items)
       notifyDataSetChanged()
     }
@@ -57,7 +59,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
   }
 
   override fun showEmptyData() {
-    (binding.contentMainList.adapter as RepositoryListAdapter).apply {
+    (rvList.adapter as RepositoryListAdapter).apply {
       setItems(emptyList())
       notifyDataSetChanged()
     }
@@ -76,7 +78,7 @@ class RepositoryListFragment : BaseFragment<ContentMainBinding>(), RepositoryLis
   private fun setupSearch() {
     disposeBag.add(
       RxTextView
-        .textChanges(binding.contentMainSearch)
+        .textChanges(etSearch)
         .debounce(300, TimeUnit.MILLISECONDS)
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
